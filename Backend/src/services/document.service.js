@@ -40,17 +40,17 @@ exports.generate = async ({ userId, body, files }) => {
     try { parsedMeta = JSON.parse(meta); } catch {}
   }
 
-  const finalMeta = {
-    studentName: parsedMeta?.studentName || "Student",
-    prn: parsedMeta?.prn || "0000000000",
-    facultyName: parsedMeta?.facultyName || template.defaultMeta?.facultyName || "Faculty",
-    title: parsedMeta?.title || "Academic Report",
-    subject: parsedMeta?.subject || template.subject || "Cloud Architecture and Services",
-    program: parsedMeta?.program || template.defaultMeta?.program || "B.Tech TY (CCSA)",
-    school: template.defaultMeta?.school || "School of Computer Science, Engineering and Applications(SCSEA)",
-    namePrefix: parsedMeta?.namePrefix || parsedMeta?.prn || "Lab",
-    logoPath: path.join(__dirname, "../../dypiu.png"),
-  };
+const finalMeta = {
+  studentName: parsedMeta?.studentName || "Student",
+  prn: parsedMeta?.prn || "0000000000",
+  facultyName: parsedMeta?.facultyName || template.defaultMeta?.facultyName || "Faculty",
+  title: (parsedMeta?.title && parsedMeta.title.trim()) ? parsedMeta.title.trim() : "Academic Report",
+  subject: parsedMeta?.subject || template.subject || "Cloud Architecture and Services",
+  program: parsedMeta?.program || template.defaultMeta?.program || "B.Tech TY (CCSA)",
+  school: template.defaultMeta?.school || "School of Computer Science, Engineering and Applications(SCSEA)",
+  namePrefix: parsedMeta?.namePrefix || parsedMeta?.prn || "Lab",
+  logoPath: path.join(__dirname, "../../dypiu.png"),
+};
 
   const filesArray = Array.isArray(files) ? files : files ? Object.values(files).flat() : [];
   const refFile = filesArray.find((f) => f.fieldname === "reference");
