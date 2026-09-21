@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Academic Report Generator</title>
+    <meta name="description" content="Template-driven academic report generator with dynamic field configuration, section customization, live A4 preview, and export." />
+    <meta property="og:title" content="Academic Report Generator" />
+    <meta property="og:description" content="Template-driven academic report generator with dynamic field configuration, section customization, live A4 preview, and export." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <!-- iOS Liquid Lens Displacement Filter for Chromium -->
+    <svg style="position: fixed; top: -9999px; left: -9999px; width: 0; height: 0;" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="ios-liquid-refract" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="1" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+          <feGaussianBlur in="displaced" stdDeviation="0.4" result="blurred" />
+          <feBlend mode="normal" in="SourceGraphic" in2="blurred" />
+        </filter>
+      </defs>
+    </svg>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

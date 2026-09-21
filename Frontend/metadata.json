@@ -1,0 +1,6 @@
+{
+  "name": "Academic Report Generator",
+  "description": "Template-driven academic report generator with dynamic field configuration, section customization, live A4 preview, and export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

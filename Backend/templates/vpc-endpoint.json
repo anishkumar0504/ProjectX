@@ -1,0 +1,208 @@
+{
+  "aim": "To deploy an Application Load Balancer using the AWS CLI across three EC2 instances that display their private IP addresses and server identifiers on page refresh.",
+  "objectives": [
+    "To create a custom Virtual Private Cloud with public subnets across multiple availability zones.",
+    "To launch three Amazon EC2 instances with custom user data scripts for web server deployment.",
+    "To configure a target group and register the three EC2 instances using the AWS CLI.",
+    "To provision an Application Load Balancer and attach listener rules to distribute traffic.",
+    "To verify round-robin traffic distribution and dynamic server identification upon browser refresh."
+  ],
+  "services": [
+    {
+      "name": "Amazon EC2",
+      "purpose": "virtual servers for hosting web applications"
+    },
+    {
+      "name": "Elastic Load Balancing",
+      "purpose": "distributing incoming application traffic across targets"
+    },
+    {
+      "name": "Amazon VPC",
+      "purpose": "isolated cloud resources and networking infrastructure"
+    },
+    {
+      "name": "AWS IAM",
+      "purpose": "secure identity and access management for CLI operations"
+    }
+  ],
+  "prerequisites": [
+    "An active AWS account with administrative permissions.",
+    "AWS CLI installed and configured locally with appropriate credentials.",
+    "Basic understanding of Linux shell commands and HTTP protocols.",
+    "A designated AWS Region for resource deployment."
+  ],
+  "architecture": {
+    "description": "The architecture comprises a custom VPC with two public subnets spanning multiple availability zones. An Application Load Balancer receives incoming HTTP traffic and distributes requests across three EC2 instances running a web server via a target group.",
+    "caption": "Architecture diagram of the Application Load Balancer routing to three EC2 instances"
+  },
+  "architectureScreenshot": null,
+  "steps": [
+    {
+      "title": "Create VPC and Subnets",
+      "instructions": [
+        "Open the Amazon VPC dashboard in the AWS Management Console and click \"Create VPC\".",
+        "Select \"VPC and more\", enter \"2503Anish-VPC\" for the Name tag, and choose 2 Availability Zones.",
+        "Set the number of public subnets to 2 and private subnets to 0.",
+        "Click \"Create VPC\" and wait for the resource creation to complete successfully."
+      ],
+      "commands": [
+        "aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications ResourceType=vpc,Tags=[{Key=Name,Value=2503Anish-VPC}]"
+      ],
+      "screenshotCaption": "VPC creation summary dashboard",
+      "screenshotHint": "A screenshot showing the newly created VPC details and associated subnets.",
+      "shots": []
+    },
+    {
+      "title": "Create Security Group",
+      "instructions": [
+        "Navigate to the EC2 dashboard, select \"Security Groups\", and click \"Create security group\".",
+        "Enter \"2503Anish-SG\" as the Security group name and \"HTTP and SSH access\" as the description.",
+        "Select \"2503Anish-VPC\" from the VPC dropdown list.",
+        "Add an inbound rule for HTTP on port 80 from source anywhere, and another for SSH on port 22.",
+        "Click \"Create security group\" to save the configurations."
+      ],
+      "commands": [
+        "aws ec2 create-security-group --group-name 2503Anish-SG --description \"Security group for ALB lab\" --vpc-id <vpc-id>"
+      ],
+      "screenshotCaption": "Security group configuration view",
+      "screenshotHint": "A screenshot displaying the inbound rules configured for the security group.",
+      "shots": []
+    },
+    {
+      "title": "Launch EC2 Instances",
+      "instructions": [
+        "Open the EC2 console, click \"Launch instance\", and enter \"2503Anish-Server1\" as the name.",
+        "Select Amazon Linux 2 AMI and t2.micro instance type, then choose your key pair.",
+        "Configure network settings to use \"2503Anish-VPC\" and assign the security group created previously.",
+        "Expand Advanced details, paste the user data script to install Apache and echo server identification, and click \"Launch instance\".",
+        "Repeat the launch process for server 2 and server 3."
+      ],
+      "commands": [
+        "aws ec2 run-instances --image-id ami-0123456789abcdef0 --count 3 --instance-type t2.micro --key-name my-key --security-group-ids <sg-id> --subnet-id <subnet-id>"
+      ],
+      "screenshotCaption": "EC2 instances running list",
+      "screenshotHint": "A screenshot showing all three EC2 instances in the running state.",
+      "shots": []
+    },
+    {
+      "title": "Create Target Group",
+      "instructions": [
+        "Open the EC2 console, scroll down the left menu, and click \"Target Groups\".",
+        "Click \"Create target group\", choose \"Instances\" as target type, and enter \"2503Anish-TG\" as the target group name.",
+        "Select HTTP protocol on port 80 and choose \"2503Anish-VPC\" as the VPC.",
+        "Keep default health check settings and click \"Next\".",
+        "Do not register targets yet, and click \"Create target group\"."
+      ],
+      "commands": [
+        "aws elbv2 create-target-group --name 2503Anish-TG --protocol HTTP --port 80 --target-type instance --vpc-id <vpc-id>"
+      ],
+      "screenshotCaption": "Target group details page",
+      "screenshotHint": "A screenshot showing the created target group summary.",
+      "shots": []
+    },
+    {
+      "title": "Register EC2 Instances to Target Group",
+      "instructions": [
+        "Open the EC2 dashboard, select \"Target Groups\", and click on \"2503Anish-TG\".",
+        "Click the \"Targets\" tab and then click \"Register targets\".",
+        "Select the checkboxes for all three EC2 instances created in the earlier step.",
+        "Click \"Include as pending below\" to add them to the registration list.",
+        "Click \"Register pending targets\" to finalize the attachment."
+      ],
+      "commands": [
+        "aws elbv2 register-targets --target-group-arn <tg-arn> --targets Id=<instance-id-1> Id=<instance-id-2> Id=<instance-id-3>"
+      ],
+      "screenshotCaption": "Registered targets list",
+      "screenshotHint": "A screenshot showing the three instances registered under the target group.",
+      "shots": []
+    },
+    {
+      "title": "Create Application Load Balancer",
+      "instructions": [
+        "Open the EC2 dashboard, select \"Load Balancers\", and click \"Create load balancer\".",
+        "Select \"Application Load Balancer\" and click \"Create\".",
+        "Enter \"2503Anish-ALB\" for the Load balancer name and select \"Internet-facing\".",
+        "Select \"2503Anish-VPC\" and check both public subnets across the availability zones.",
+        "Select \"2503Anish-SG\" as the security group and click \"Create load balancer\"."
+      ],
+      "commands": [
+        "aws elbv2 create-load-balancer --name 2503Anish-ALB --subnets <subnet-1> <subnet-2> --security-groups <sg-id>"
+      ],
+      "screenshotCaption": "Load balancer creation confirmation",
+      "screenshotHint": "A screenshot displaying the basic configuration of the created ALB.",
+      "shots": []
+    },
+    {
+      "title": "Configure ALB Listener and Routing",
+      "instructions": [
+        "Navigate to the Load Balancers page, select \"2503Anish-ALB\", and click the \"Listeners\" tab.",
+        "Click \"Add listener\", set protocol to HTTP on port 80.",
+        "For action, select \"Forward to\" and choose \"2503Anish-TG\" from the target group dropdown.",
+        "Click \"Save changes\" to configure the routing rule."
+      ],
+      "commands": [
+        "aws elbv2 create-listener --load-balancer-arn <alb-arn> --protocol HTTP --port 80 --default-actions Type=forward,TargetGroupArn=<tg-arn>"
+      ],
+      "screenshotCaption": "Listener routing rule configuration",
+      "screenshotHint": "A screenshot showing the listener configured to forward traffic to the target group.",
+      "shots": []
+    },
+    {
+      "title": "Verify Target Health",
+      "instructions": [
+        "Go to the EC2 console, click \"Target Groups\", and open \"2503Anish-TG\".",
+        "Click on the \"Targets\" tab to view the registration status.",
+        "Wait a few moments and verify that the health status for all three instances changes from initial to \"healthy\".",
+        "Refresh the page if necessary to update the status."
+      ],
+      "commands": [
+        "aws elbv2 describe-target-health --target-group-arn <tg-arn>"
+      ],
+      "screenshotCaption": "Target health status dashboard",
+      "screenshotHint": "A screenshot showing all three instances reporting a healthy status.",
+      "shots": []
+    },
+    {
+      "title": "Test Load Balancer via CLI and Browser",
+      "instructions": [
+        "Copy the DNS name of \"2503Anish-ALB\" from the load balancer description tab.",
+        "Open a web browser and paste the DNS name into the address bar.",
+        "Press enter to view the web page output.",
+        "Refresh the browser multiple times to observe the server identifier and private IP address changing between server 1, server 2, and server 3."
+      ],
+      "commands": [
+        "curl -s http://<alb-dns-name> && curl -s http://<alb-dns-name> && curl -s http://<alb-dns-name>"
+      ],
+      "screenshotCaption": "Web browser displaying server response",
+      "screenshotHint": "A screenshot showing the web browser rendering the private IP and server identifier.",
+      "shots": []
+    },
+    {
+      "title": "Verify and Cleanup Resources",
+      "instructions": [
+        "Verify that incoming traffic was successfully distributed across all three instances in a round-robin fashion.",
+        "Delete the load balancer using the AWS CLI or console to avoid ongoing charges.",
+        "Delete the target group, security groups, and terminate the three EC2 instances.",
+        "Delete the VPC to complete the resource cleanup."
+      ],
+      "commands": [
+        "aws elbv2 delete-load-balancer --load-balancer-arn <alb-arn>",
+        "aws ec2 terminate-instances --instance-ids <id-1> <id-2> <id-3>"
+      ],
+      "screenshotCaption": "Resource cleanup confirmation",
+      "screenshotHint": "A screenshot showing the resource termination status in the AWS console.",
+      "shots": []
+    }
+  ],
+  "verification": [
+    "Confirmed the VPC and subnets were successfully deployed using the CLI.",
+    "Confirmed three EC2 web server instances were launched and registered to the target group.",
+    "Confirmed the Application Load Balancer was provisioned with active HTTP listener rules.",
+    "Confirmed all registered targets passed the health checks.",
+    "Confirmed refreshing the browser successfully rotated traffic across server 1, server 2, and server 3 showing their respective IPs."
+  ],
+  "expectedOutput": "The web browser successfully loads a page displaying the private IP address and corresponding server identifier. Upon refreshing the page multiple times, the output cycles between server 1, server 2, and server 3, demonstrating successful load balancing.",
+  "conclusion": "The practical successfully demonstrated the deployment of an Application Load Balancer across three EC2 instances using the AWS CLI. The setup effectively distributed incoming HTTP traffic among multiple targets in a round-robin manner. This architectural pattern improves application availability and fault tolerance by preventing single points of failure.",
+  "unassigned": [],
+  "reassigned": []
+}
