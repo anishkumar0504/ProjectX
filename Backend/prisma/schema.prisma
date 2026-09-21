@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -41,10 +42,8 @@ model Template {
   subject         String
   previewImageUrl String?
   
-  // Section configuration
-  defaultSections String   // JSON: { aim: true, objectives: true, steps: true, ... }
-  sectionOrder    String   // JSON: ["aim", "objectives", "steps", ...]
-  
+  // ✅ Updated comment: This is now a JSON Array, not an object
+  defaultSections String   // JSON: [{ id: "aim", type: "aim", title: "Aim", enabled: true, proof: "optional" }, ...]
   defaultContent  String
   defaultMeta     String
   defaultLayout   String
@@ -60,33 +59,9 @@ model Document {
   templateId  String
 
   meta        String
-  sections    String   // JSON: { aim: true, objectives: false, steps: true, ... }
+  // ✅ Updated comment: This is now a JSON Array, not an object
+  sections    String   // JSON: [{ id: "aim", type: "aim", title: "Aim", enabled: true, proof: "optional" }, ...]
   sectionOrder String? // JSON: ["aim", "steps", "conclusion"] (custom order)
-  imageLayout String
-
-  content     String?
-  screenshots String?
-
-  status      String   @default("GENERATING")
-  outputPath  String?
-  error       String?
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  template    Template  @relation(fields: [templateId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model Document {
-  id          String   @id @default(cuid())
-  userId      String
-  templateId  String
-
-  meta        String
-  sections    String
   imageLayout String
 
   content     String?

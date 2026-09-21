@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { GeneratedReportResponse } from "../../types/report";
-import { FileDown, Download, Printer, Copy, Check, ExternalLink } from "lucide-react";
-
+import { Download, Printer, Copy, Check, ExternalLink } from "lucide-react"; // ✅ Removed FileDown
 interface DownloadButtonsProps {
   reportResponse: GeneratedReportResponse;
   fileNameBase?: string;

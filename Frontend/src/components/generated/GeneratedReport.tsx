@@ -1,7 +1,6 @@
 import React from "react";
 import type { GeneratedReportResponse, ReportState, ReportTemplate } from "../../types/report";
-import { Check, RotateCcw, Edit, FileText, Calendar, HardDrive, FileDown } from "lucide-react"; // ✅ Added FileDown
-
+import { Check, RotateCcw, Edit, FileText, Calendar, FileDown } from "lucide-react"; // ✅ Removed HardDrive
 interface GeneratedReportProps {
   response: GeneratedReportResponse;
   template: ReportTemplate;
@@ -29,7 +28,7 @@ export const GeneratedReport: React.FC<GeneratedReportProps> = ({
 
     try {
       // 1. Fetch the file as a Blob
-      const res = await fetch(`http://localhost:4000/api/documents/${response.id}/download`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/documents/${response.id}/download`, {
         method: "GET",
         headers: {
           // ✅ Future-proof: Add your auth token here when you enable multi-user

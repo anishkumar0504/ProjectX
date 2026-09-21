@@ -12,11 +12,13 @@ export interface GenerateReportPayload {
     school?: string;
     namePrefix?: string;
   };
-  sections: Record<string, boolean>;
+  sections: string; // ✅ Changed from Record<string, boolean> to string
     customSections?: { id: string; title: string }[]; // ✅ ADD THIS
 
   imageLayout: "perStep" | "architectureOnly" | "combineAll" | "none";
   useGemini: boolean;
+    allowMissingProof?: boolean; // ✅ Added to fix TS2339
+
 }
 
 export async function generateReport(

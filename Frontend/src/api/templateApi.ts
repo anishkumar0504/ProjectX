@@ -30,7 +30,9 @@ export async function fetchTemplates(): Promise<ReportTemplate[]> {
           title: sectionMap[key].title,
           description: sectionMap[key].description,
           enabled: true,
-          screenshotRequired: key === "steps" || key === "verification",
+                    screenshotRequired: key === "steps" || key === "verification",
+
+          proof: (key === "steps" || key === "verification") ? "required" : "optional", // ✅ Added
           isCustom: false,
           content: "",
         });

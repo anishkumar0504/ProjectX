@@ -203,7 +203,7 @@ const addCustomSection = useCallback((title: string, description: string, proof:
         title,
         description,
         enabled: true,
-        proof, // ✅ Store the string, not a boolean
+        proof, // ✅ Now it is used
         isCustom: true,
         content: "",
       },

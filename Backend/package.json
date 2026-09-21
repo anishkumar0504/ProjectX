@@ -9,10 +9,11 @@
     "prisma:seed": "node prisma/seed.js",
     "test": "jest --runInBand --forceExit",
     "generate-previews": "node scripts/generate-previews.js",
-    "test:watch": "jest --watch --runInBand"
+    "test:watch": "jest --watch --runInBand",
+    "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {
-    "@prisma/client": "^5.20.0",
+    "@prisma/client": "6.19.3",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "docx": "^8.5.0",
@@ -22,13 +23,14 @@
     "mammoth": "^1.12.3",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "pg": "^8.23.0",
     "sharp": "^0.33.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "jest": "^30.5.2",
     "nodemon": "^3.1.7",
-    "prisma": "^5.20.0",
+    "prisma": "6.19.3",
     "supertest": "^7.2.2"
   }
 }

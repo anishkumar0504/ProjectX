@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Moon, Sun, Sparkles, FileSpreadsheet } from "lucide-react";
+import { Moon, Sun, FileSpreadsheet } from "lucide-react"; // ✅ Removed Sparkles
 
 interface TopbarProps {
   currentStep: number;
@@ -9,7 +9,6 @@ interface TopbarProps {
 
 export const Topbar: React.FC<TopbarProps> = ({
   templateName,
-  onFillSampleData,
 }) => {
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
