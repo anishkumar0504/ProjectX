@@ -157,9 +157,14 @@ const handleGenerate = async () => {
       sections: JSON.stringify(sectionsPayload),
       imageLayout: "perStep" as const,
       // ✅ FIX 2: Force Gemini if there are custom sections, even without screenshots
-      useGemini: uploadedScreenshots.length > 0 || !!referenceFile || !!referenceText || hasCustomSections,
-      allowMissingProof: false,
-    };
+     useGemini: uploadedScreenshots.length > 0 || 
+             !!referenceFile || 
+             !!referenceText || 
+             hasCustomSections ||
+             report.title !== selectedTemplate.defaultTitle, 
+             
+  allowMissingProof: false,
+};
 
     setGenerationProgress(70);
     setGenerationPhase("Synthesizing document via Gemini & DocBuilder...");

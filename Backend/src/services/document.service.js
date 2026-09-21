@@ -28,7 +28,7 @@ exports.generate = async ({ userId, body, files }) => {
   let validUserId = userId;
   if (!validUserId || validUserId === "test-user-id") {
     const testUser = await exports.getOrCreateTestUser();
-    validUserId = testUser.id; // Use the real database ID
+    validUserId = testUser.id; 
   }
 
   const { templateSlug, meta, sections, imageLayout, useGemini, referenceText, customSections } = body;
@@ -40,17 +40,23 @@ exports.generate = async ({ userId, body, files }) => {
     try { parsedMeta = JSON.parse(meta); } catch {}
   }
 
-const finalMeta = {
-  studentName: parsedMeta?.studentName || "Student",
-  prn: parsedMeta?.prn || "0000000000",
-  facultyName: parsedMeta?.facultyName || template.defaultMeta?.facultyName || "Faculty",
-  title: (parsedMeta?.title && parsedMeta.title.trim()) ? parsedMeta.title.trim() : "Academic Report",
-  subject: parsedMeta?.subject || template.subject || "Cloud Architecture and Services",
-  program: parsedMeta?.program || template.defaultMeta?.program || "B.Tech TY (CCSA)",
-  school: template.defaultMeta?.school || "School of Computer Science, Engineering and Applications(SCSEA)",
-  namePrefix: parsedMeta?.namePrefix || parsedMeta?.prn || "Lab",
-  logoPath: path.join(__dirname, "../../dypiu.png"),
-};
+  // ✅ FIX: Validate title properly before building finalMeta
+  const rawTitle = parsedMeta?.title;
+  const safeTitle = (rawTitle && typeof rawTitle === 'string' && rawTitle.trim().length > 0) 
+    ? rawTitle.trim() 
+    : "Academic Report";
+
+  const finalMeta = {
+    studentName: parsedMeta?.studentName || "Student",
+    prn: parsedMeta?.prn || "0000000000",
+    facultyName: parsedMeta?.facultyName || template.defaultMeta?.facultyName || "Faculty",
+    title: safeTitle, // ✅ Uses validated title
+    subject: parsedMeta?.subject || template.subject || "Cloud Architecture and Services",
+    program: parsedMeta?.program || template.defaultMeta?.program || "B.Tech TY (CCSA)",
+    school: template.defaultMeta?.school || "School of Computer Science, Engineering and Applications(SCSEA)",
+    namePrefix: parsedMeta?.namePrefix || parsedMeta?.prn || "Lab",
+    logoPath: path.join(__dirname, "../../dypiu.png"),
+  };
 
   const filesArray = Array.isArray(files) ? files : files ? Object.values(files).flat() : [];
   const refFile = filesArray.find((f) => f.fieldname === "reference");
@@ -65,7 +71,7 @@ const finalMeta = {
 
   const doc = await prisma.document.create({
     data: {
-      userId: validUserId, // ✅ NOW USING A VALID DATABASE ID
+      userId: validUserId,
       templateId: template.id,
       meta: JSON.stringify(finalMeta),
       sections: JSON.stringify(parsedSections),
@@ -81,10 +87,22 @@ const finalMeta = {
     const hasCustomSections = Array.isArray(parsedSections) && 
       parsedSections.some(s => s.type === 'custom' && s.enabled !== false);
       
-    const shouldUseGemini = useGemini === "true" || useGemini === true || 
-      shotFiles.length > 0 || !!refFile || !!referenceText || hasCustomSections;
+    // ✅ ROBUST GEMINI CHECK: Handles FormData string "true", boolean true, and asset presence
+    const shouldUseGemini = 
+      useGemini === "true" || 
+      useGemini === true || 
+      shotFiles.length > 0 || 
+      !!refFile || 
+      !!referenceText || 
+      hasCustomSections;
+  (finalMeta.title !== "Academic Report" && finalMeta.title !== template.defaultTitle);
+    console.log(" DEBUG: useGemini raw:", useGemini, typeof useGemini);
+    console.log("🔍 DEBUG: shouldUseGemini:", shouldUseGemini);
+    console.log("🔍 DEBUG: Title sent to Gemini:", finalMeta.title);
 
     if (shouldUseGemini) {
+      console.log("✅ Calling Gemini API for title:", finalMeta.title);
+      
       let enabledKeys = [];
       let customSectionsForGemini = [];
       
@@ -99,17 +117,24 @@ const finalMeta = {
           .map(([key]) => key);
       }
 
-      content = await geminiService.generatePracticalContent({
-        title: finalMeta.title,
-        subject: finalMeta.subject,
-        namePrefix: finalMeta.namePrefix,
-        referenceDocx: refFile ? refFile.path : undefined,
-        referenceText: referenceText || undefined,
-        images: shotFiles.map((f) => ({ path: f.path, name: f.originalname })),
-        enabledSections: enabledKeys,
-        customSections: customSectionsForGemini,
-      });
-      
+      try {
+        content = await geminiService.generatePracticalContent({
+          title: finalMeta.title,           // ✅ Explicitly pass the correct title
+          subject: finalMeta.subject,
+          namePrefix: finalMeta.namePrefix,
+          referenceDocx: refFile ? refFile.path : undefined,
+          referenceText: referenceText || undefined,
+          images: shotFiles.map((f) => ({ path: f.path, name: f.originalname })),
+          enabledSections: enabledKeys,
+          customSections: customSectionsForGemini,
+        });
+        console.log("✅ Gemini returned content for aim:", content?.aim?.substring(0, 60));
+      } catch (geminiErr) {
+        console.error("❌ Gemini failed, falling back to template default:", geminiErr.message);
+        // Keep template.defaultContent as safe fallback instead of crashing
+      }
+    } else {
+      console.log("⚠️ Skipping Gemini - using template default content for:", finalMeta.title);
     }
 
     const outputFilename = `${doc.id}.docx`;
@@ -132,32 +157,31 @@ const finalMeta = {
     fs.writeFileSync(outputPath, buf);
     console.log(`✅ Final document saved to disk: ${outputFilename}`);
 
-    // 🧹 2. CLEANUP INPUTS ONLY: Delete temporary uploaded source files (screenshots & reference)
-    // We DO NOT delete the outputPath (.docx) because the user needs to download it!
+    // 🧹 2. CLEANUP INPUTS ONLY: Delete temporary uploaded source files
     for (const f of filesArray) {
       try {
         fs.unlinkSync(f.path);
         console.log(`🗑️ Cleaned up temp input: ${f.originalname}`);
       } catch (cleanupErr) {
-        console.warn(`⚠️ Could not delete temp file: ${f.path}`);
+        console.warn(`️ Could not delete temp file: ${f.path}`);
       }
     }
 
-    // 3. Update Database with the ACTUAL outputPath so the download route can find it
+    // 3. Update Database with the ACTUAL outputPath
     const updated = await prisma.document.update({
       where: { id: doc.id },
       data: {
         status: "READY",
         content: JSON.stringify(content),
         screenshots: JSON.stringify(shotFiles.map((f, i) => ({ index: i, name: f.originalname }))),
-        outputPath: outputPath, // ✅ SAVED! (Not null)
+        outputPath: outputPath,
       },
     });
 
     return { document: this.serialize(updated) };
 
   } catch (err) {
-    // 🧹 CLEANUP ON FAILURE: Delete temp inputs if generation crashes
+    // 🧹 CLEANUP ON FAILURE
     for (const f of filesArray) {
       try { fs.unlinkSync(f.path); } catch {}
     }
@@ -171,7 +195,6 @@ const finalMeta = {
     throw err;
   }
 };
-
 exports.listForUser = async (userId) => {
   let validUserId = userId;
   if (!validUserId || validUserId === "test-user-id") {
