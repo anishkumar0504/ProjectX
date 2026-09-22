@@ -1,7 +1,6 @@
 import React, { useState, FormEvent, useEffect } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Mail, Lock, User, Eye, EyeOff, Sun, Moon, Loader2 } from "lucide-react";
-import { GoogleOAuthProvider } from "@react-oauth/google"; // ✅ Import the provider
 
 // Base URL from environment variable
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
