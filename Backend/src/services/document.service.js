@@ -7,7 +7,9 @@ const geminiService = require("./gemini.service");
 const docBuilderService = require("./docBuilder.service");
 const { ApiError } = require("../utils/apiError");
 
-// ✅ HELPER: Guarantees a valid user exists for testing
+// ✅ Matches the "10 credits = 1 file" rule from your pricing page
+const CREDIT_COST_PER_DOCUMENT = 10;
+
 exports.getOrCreateTestUser = async () => {
   let user = await prisma.user.findUnique({ where: { email: "test@local.dev" } });
   if (!user) {
@@ -24,33 +26,44 @@ exports.getOrCreateTestUser = async () => {
 };
 
 exports.generate = async ({ userId, body, files }) => {
-  // ✅ CRITICAL FIX: Ensure the userId actually exists in the database
   let validUserId = userId;
   if (!validUserId || validUserId === "test-user-id") {
     const testUser = await exports.getOrCreateTestUser();
-    validUserId = testUser.id; 
+    validUserId = testUser.id;
   }
+
+  // ✅ CREDIT CHECK + ATOMIC DEDUCTION
+  // Only decrements if credits >= cost — updateMany's where clause prevents
+  // a race condition where two requests both pass a naive "if" check.
+  const deduction = await prisma.user.updateMany({
+    where: { id: validUserId, credits: { gte: CREDIT_COST_PER_DOCUMENT } },
+    data: { credits: { decrement: CREDIT_COST_PER_DOCUMENT } },
+  });
+
+  if (deduction.count === 0) {
+    throw new ApiError(402, `Insufficient credits. This action requires ${CREDIT_COST_PER_DOCUMENT} credits.`);
+  }
+
+  console.log(`💳 Deducted ${CREDIT_COST_PER_DOCUMENT} credits from user ${validUserId}`);
 
   const { templateSlug, meta, sections, imageLayout, useGemini, referenceText, customSections } = body;
   const template = await templateService.getBySlug(templateSlug);
-  
-  // ✅ Safely parse meta if it's a string (from FormData)
+
   let parsedMeta = meta;
   if (typeof meta === 'string') {
     try { parsedMeta = JSON.parse(meta); } catch {}
   }
 
-  // ✅ FIX: Validate title properly before building finalMeta
   const rawTitle = parsedMeta?.title;
-  const safeTitle = (rawTitle && typeof rawTitle === 'string' && rawTitle.trim().length > 0) 
-    ? rawTitle.trim() 
+  const safeTitle = (rawTitle && typeof rawTitle === 'string' && rawTitle.trim().length > 0)
+    ? rawTitle.trim()
     : "Academic Report";
 
   const finalMeta = {
     studentName: parsedMeta?.studentName || "Student",
     prn: parsedMeta?.prn || "0000000000",
     facultyName: parsedMeta?.facultyName || template.defaultMeta?.facultyName || "Faculty",
-    title: safeTitle, // ✅ Uses validated title
+    title: safeTitle,
     subject: parsedMeta?.subject || template.subject || "Cloud Architecture and Services",
     program: parsedMeta?.program || template.defaultMeta?.program || "B.Tech TY (CCSA)",
     school: template.defaultMeta?.school || "School of Computer Science, Engineering and Applications(SCSEA)",
@@ -62,7 +75,6 @@ exports.generate = async ({ userId, body, files }) => {
   const refFile = filesArray.find((f) => f.fieldname === "reference");
   const shotFiles = filesArray.filter((f) => f.fieldname === "shots" || f.fieldname === "screenshot");
 
-  // ✅ Parse sections if it's a JSON string from FormData
   let parsedSections = sections;
   if (typeof sections === 'string') {
     try { parsedSections = JSON.parse(sections); } catch {}
@@ -82,30 +94,28 @@ exports.generate = async ({ userId, body, files }) => {
 
   try {
     let content = template.defaultContent;
-    
-    // ✅ Check for enabled custom sections to force Gemini
-    const hasCustomSections = Array.isArray(parsedSections) && 
+
+    const hasCustomSections = Array.isArray(parsedSections) &&
       parsedSections.some(s => s.type === 'custom' && s.enabled !== false);
-      
-    // ✅ ROBUST GEMINI CHECK: Handles FormData string "true", boolean true, and asset presence
-    const shouldUseGemini = 
-      useGemini === "true" || 
-      useGemini === true || 
-      shotFiles.length > 0 || 
-      !!refFile || 
-      !!referenceText || 
+
+    const shouldUseGemini =
+      useGemini === "true" ||
+      useGemini === true ||
+      shotFiles.length > 0 ||
+      !!refFile ||
+      !!referenceText ||
       hasCustomSections;
-  (finalMeta.title !== "Academic Report" && finalMeta.title !== template.defaultTitle);
-    console.log(" DEBUG: useGemini raw:", useGemini, typeof useGemini);
+
+    console.log("🔍 DEBUG: useGemini raw:", useGemini, typeof useGemini);
     console.log("🔍 DEBUG: shouldUseGemini:", shouldUseGemini);
     console.log("🔍 DEBUG: Title sent to Gemini:", finalMeta.title);
 
     if (shouldUseGemini) {
       console.log("✅ Calling Gemini API for title:", finalMeta.title);
-      
+
       let enabledKeys = [];
       let customSectionsForGemini = [];
-      
+
       if (Array.isArray(parsedSections)) {
         enabledKeys = parsedSections.filter(s => s.enabled !== false).map(s => s.type);
         customSectionsForGemini = parsedSections
@@ -119,7 +129,7 @@ exports.generate = async ({ userId, body, files }) => {
 
       try {
         content = await geminiService.generatePracticalContent({
-          title: finalMeta.title,           // ✅ Explicitly pass the correct title
+          title: finalMeta.title,
           subject: finalMeta.subject,
           namePrefix: finalMeta.namePrefix,
           referenceDocx: refFile ? refFile.path : undefined,
@@ -131,7 +141,6 @@ exports.generate = async ({ userId, body, files }) => {
         console.log("✅ Gemini returned content for aim:", content?.aim?.substring(0, 60));
       } catch (geminiErr) {
         console.error("❌ Gemini failed, falling back to template default:", geminiErr.message);
-        // Keep template.defaultContent as safe fallback instead of crashing
       }
     } else {
       console.log("⚠️ Skipping Gemini - using template default content for:", finalMeta.title);
@@ -140,7 +149,6 @@ exports.generate = async ({ userId, body, files }) => {
     const outputFilename = `${doc.id}.docx`;
     const outputPath = path.join(__dirname, "../../uploads/outputs", outputFilename);
 
-    // 1. Build and save the final document to disk
     const buf = await docBuilderService.buildPracticalDocx({
       meta: finalMeta,
       content: content,
@@ -157,7 +165,6 @@ exports.generate = async ({ userId, body, files }) => {
     fs.writeFileSync(outputPath, buf);
     console.log(`✅ Final document saved to disk: ${outputFilename}`);
 
-    // 🧹 2. CLEANUP INPUTS ONLY: Delete temporary uploaded source files
     for (const f of filesArray) {
       try {
         fs.unlinkSync(f.path);
@@ -167,7 +174,6 @@ exports.generate = async ({ userId, body, files }) => {
       }
     }
 
-    // 3. Update Database with the ACTUAL outputPath
     const updated = await prisma.document.update({
       where: { id: doc.id },
       data: {
@@ -181,20 +187,30 @@ exports.generate = async ({ userId, body, files }) => {
     return { document: this.serialize(updated) };
 
   } catch (err) {
-    // 🧹 CLEANUP ON FAILURE
     for (const f of filesArray) {
       try { fs.unlinkSync(f.path); } catch {}
     }
-    
+
     await prisma.document.update({
       where: { id: doc.id },
       data: { status: "FAILED", error: err.message },
     }).catch(() => {});
-    
+
+    // ✅ REFUND — generation failed, give the credits back
+    await prisma.user.update({
+      where: { id: validUserId },
+      data: { credits: { increment: CREDIT_COST_PER_DOCUMENT } },
+    }).catch((refundErr) => {
+      console.error("⚠️ CRITICAL: Failed to refund credits after generation failure:", refundErr);
+    });
+    console.log(`↩️ Refunded ${CREDIT_COST_PER_DOCUMENT} credits to user ${validUserId} after failure`);
+
     console.error("❌ Document Generation Failed:", err);
     throw err;
   }
 };
+
+// ...rest of file (listForUser, getById, serialize, safeJson) unchanged
 exports.listForUser = async (userId) => {
   let validUserId = userId;
   if (!validUserId || validUserId === "test-user-id") {

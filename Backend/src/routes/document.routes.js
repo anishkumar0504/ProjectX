@@ -4,12 +4,14 @@ const ctrl = require("../controllers/document.controller");
 const { uploadDocumentFiles } = require("../middleware/upload.middleware");
 const { validate } = require("../middleware/validate.middleware");
 const { generateDocSchema } = require("../utils/validators");
-// const auth = require("../middleware/auth.middleware"); // Uncomment when ready
+
+// ✅ 1. UNCOMMENTED: Import the auth middleware
+const auth = require("../middleware/auth.middleware"); 
 
 // Generate Document
 router.post(
   "/generate",
-  // auth, // ✅ Add this when multi-user auth is ready
+  auth, // ✅ 2. APPLIED HERE ONLY: Protects credit deduction and ensures req.user is set
   uploadDocumentFiles,
   (req, res, next) => {
     for (const k of ["meta", "sections"]) {
@@ -26,13 +28,13 @@ router.post(
   ctrl.generate
 );
 
-// ✅ DOWNLOAD ROUTE
+// ✅ DOWNLOAD ROUTE (Left public as requested)
 router.get(
   "/:id/download",
-  // auth, // ✅ Add this when multi-user auth is ready
   ctrl.download
 );
 
+// ✅ LIST & GET ROUTES (Left public as requested)
 router.get("/", ctrl.list);
 router.get("/:id", ctrl.get);
 

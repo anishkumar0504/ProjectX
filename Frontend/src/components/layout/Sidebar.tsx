@@ -70,7 +70,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectStep,
 }) => {
   return (
-    <aside className="w-full lg:w-72 apple-glass-card lg:sticky lg:top-20 self-start rounded-3xl p-4 sm:p-5 flex flex-col justify-between shrink-0 transition-all h-[calc(100vh-6rem)]">
+    <aside 
+      className="w-full lg:w-72 apple-glass-card lg:sticky lg:top-20 self-start rounded-3xl p-4 sm:p-5 flex flex-col justify-start shrink-0 transition-all h-[calc(100vh-6rem)]"
+    >
       <div>
         <div className="mb-4 px-2">
           <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
@@ -165,8 +167,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Refined ProjectX Footer */}
-      <div className="mt-auto pt-5 border-t border-black/5 dark:border-white/10 px-1">
+      {/* Refined ProjectX Footer - HIDDEN ON MOBILE */}
+      <div className="hidden lg:block mt-auto pt-5 border-t border-black/5 dark:border-white/10 px-1">
         {/* Slogan Block */}
         <div className="mb-4 pl-1">
           <div className="flex items-center gap-2 mb-1.5">
@@ -180,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </p>
         </div>
 
-        {/* Feature Cards - Contained in a subtle background for professionalism */}
+        {/* Feature Cards */}
         <div className="grid grid-cols-2 gap-2 mb-4 p-2 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/[0.03]">
           <div className="flex flex-col gap-1.5 px-1">
             <div className="flex items-center gap-1.5">

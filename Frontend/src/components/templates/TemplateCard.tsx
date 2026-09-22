@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { ReportTemplate } from "../../types/report";
-import { Check, X, ChevronLeft, ChevronRight, ZoomIn, Images } from "lucide-react";
+import { Check, X, ChevronLeft, ChevronRight, Eye, Images } from "lucide-react"; // ✅ Changed ZoomIn to Eye
 
 interface TemplateCardProps {
   template: ReportTemplate;
@@ -66,6 +66,9 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
   const nextZoom = () => setZoomIndex((prev) => (prev + 1) % screenshotUrls.length);
   const prevZoom = () => setZoomIndex((prev) => (prev - 1 + screenshotUrls.length) % screenshotUrls.length);
 
+  // Only show the eye icon overlay if there are screenshots
+  const hasScreenshots = screenshotUrls.length > 0;
+
   return (
     <>
       <button
@@ -88,28 +91,32 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                 loading="lazy"
               />
               
-              {/* Hover Overlay for Zoom & Slide Indicator */}
-              <div 
-                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent card selection when clicking zoom
-                  openZoom(hoverIndex);
-                }}
-              >
-                <button
-                  type="button"
-                  className="p-2 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors"
-                  title="Zoom preview"
+              {/* ✅ Hover Overlay with EYE ICON */}
+              {hasScreenshots && (
+                <div 
+                  className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent card selection when clicking preview
+                    openZoom(0);
+                  }}
                 >
-                  <ZoomIn className="w-5 h-5" />
-                </button>
-                {screenshotUrls.length > 1 && (
-                  <span className="absolute bottom-3 right-3 px-2 py-1 rounded-full bg-black/60 text-white text-[10px] font-medium backdrop-blur-sm flex items-center gap-1">
-                    <Images className="w-3 h-3" />
-                    {hoverIndex + 1}/{screenshotUrls.length}
-                  </span>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 hover:bg-white text-neutral-900 shadow-lg transition-all transform hover:scale-105"
+                    title="View all screenshots"
+                  >
+                    <Eye className="w-5 h-5" />
+                    <span className="text-sm font-semibold">View Screenshots</span>
+                  </button>
+                  
+                  {screenshotUrls.length > 1 && (
+                    <span className="px-2 py-1 rounded-full bg-black/60 text-white text-[10px] font-medium backdrop-blur-sm flex items-center gap-1">
+                      <Images className="w-3 h-3" />
+                      {screenshotUrls.length} images
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Selection Indicator */}
               {isSelected && (
@@ -151,20 +158,28 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
       {/* ✅ Zoom Modal */}
       {isZoomed && screenshotUrls.length > 0 && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4" 
           onClick={closeZoom}
         >
-          <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
-            {/* Close Button */}
-            <button
-              onClick={closeZoom}
-              className="absolute -top-12 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
+          <div className="relative w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-semibold text-white">{template.name}</h3>
+                <p className="text-sm text-neutral-400">
+                  {zoomIndex + 1} of {screenshotUrls.length} screenshots
+                </p>
+              </div>
+              <button
+                onClick={closeZoom}
+                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
             {/* Main Zoomed Image */}
-            <div className="relative bg-neutral-900 rounded-2xl overflow-hidden border border-white/10 aspect-[4/3]">
+            <div className="relative bg-neutral-900 rounded-2xl overflow-hidden border border-white/10 aspect-video">
               <img
                 src={screenshotUrls[zoomIndex]}
                 alt={`${template.name} screenshot ${zoomIndex + 1}`}
@@ -202,16 +217,11 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                         : "border-white/20 opacity-50 hover:opacity-100"
                     }`}
                   >
-                    <img src={url} alt={`Thumbnail ${idx + 1}`} className="w-20 h-12 object-cover" />
+                    <img src={url} alt={`Thumbnail ${idx + 1}`} className="w-24 h-16 object-cover" />
                   </button>
                 ))}
               </div>
             )}
-            
-            <p className="text-center text-sm text-white mt-4 font-medium">{template.name}</p>
-            <p className="text-center text-xs text-neutral-400">
-              {zoomIndex + 1} of {screenshotUrls.length} screenshots
-            </p>
           </div>
         </div>
       )}

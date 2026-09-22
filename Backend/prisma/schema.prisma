@@ -19,11 +19,48 @@ model User {
   credits    Int        @default(0)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
+     orders Order[]
 
   documents  Document[]
   sessions   Session[]
 }
+enum OrderStatus {
+  CREATED
+  PAID
+  FAILED
+}
 
+model Plan {
+  id            String   @id
+  name          String
+  originalPrice Int
+  price         Int
+  credits       Int
+  features      String[]
+  popular       Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Order {
+  id                String      @id @default(cuid())
+  userId            String
+  user              User        @relation(fields: [userId], references: [id])
+  planId            String
+  plan              Plan        @relation(fields: [planId], references: [id])
+  razorpayOrderId   String      @unique
+  razorpayPaymentId String?
+  razorpaySignature String?
+  amount            Int
+  currency          String      @default("INR")
+  credits           Int
+  status            OrderStatus @default(CREATED)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
 model Session {
   id        String   @id @default(cuid())
   userId    String
@@ -44,7 +81,8 @@ model Template {
   description     String
   subject         String
   previewImageUrl String?
-  
+    screenshots     String?  // ✅ ADD THIS LINE (stores JSON array of screenshot URLs)
+
   // ✅ Updated comment: This is now a JSON Array, not an object
   defaultSections String   // JSON: [{ id: "aim", type: "aim", title: "Aim", enabled: true, proof: "optional" }, ...]
   defaultContent  String

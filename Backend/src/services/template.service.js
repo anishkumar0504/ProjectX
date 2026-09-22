@@ -33,6 +33,7 @@ exports.parse = (t) => ({
   defaultMeta: safeJson(t.defaultMeta, {}),
   defaultSections: safeJson(t.defaultSections, allSectionsOn()),
   defaultLayout: safeJson(t.defaultLayout, { mode: "perStep" }),
+  screenshots: safeJson(t.screenshots, []), // ✅ ADDED: Safely parse screenshots
 });
 
 function safeJson(s, fallback) {

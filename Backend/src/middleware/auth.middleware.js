@@ -3,18 +3,21 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { ApiError } = require("../utils/apiError");
 const config = require("../config");
+const jwt = require("jsonwebtoken");
 
-module.exports = async (req, _res, next) => {
-  // If disabled (testing phase), just continue
-  if (!config.authMiddlewareEnabled) return next();
+module.exports = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "No token provided" });
+  }
 
+  const token = authHeader.split(" ")[1];
   try {
-    const h = req.headers.authorization || "";
-    if (!h.startsWith("Bearer ")) throw new ApiError(401, "Missing token");
-    const payload = verify(h.slice(7));
-    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
-    if (!user) throw new ApiError(401, "User not found");
-    req.user = user;
+    const decoded = verify(token);
+    req.user = { id: decoded.userId || decoded.id };
     next();
-  } catch (e) { next(e); }
+  } catch (err) {
+    console.error("[auth.middleware] verify failed:", err.message);
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
 };
