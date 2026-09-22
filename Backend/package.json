@@ -7,11 +7,10 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:seed": "node prisma/seed.js",
-    
     "test": "jest --runInBand --forceExit",
     "generate-previews": "node scripts/generate-previews.js",
     "test:watch": "jest --watch --runInBand",
-"postinstall": "prisma generate"
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
@@ -20,6 +19,7 @@
     "docx": "^8.5.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "google-auth-library": "^11.1.0",
     "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.12.3",
     "morgan": "^1.10.0",

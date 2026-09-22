@@ -9,16 +9,19 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String
-  role      String     @default("USER")
-  credits   Int        @default(0)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id         String     @id @default(cuid())
+  name       String?               // ✅ Added (optional, for Google users)
+  email      String     @unique
+  password   String?               // ✅ Made OPTIONAL (String?) for Google Auth users
+  provider   String     @default("LOCAL") // ✅ "LOCAL" or "GOOGLE"
+  providerId String?               // ✅ Google's unique user ID
+  role       String     @default("USER")
+  credits    Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
-  documents Document[]
-  sessions  Session[]
+  documents  Document[]
+  sessions   Session[]
 }
 
 model Session {

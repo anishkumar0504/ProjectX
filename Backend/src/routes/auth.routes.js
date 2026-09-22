@@ -1,12 +1,24 @@
-const router = require("express").Router();
+const express = require("express");
+const router = express.Router();
 const ctrl = require("../controllers/auth.controller");
-const { validate } = require("../middleware/validate.middleware");
-const { registerSchema, loginSchema } = require("../utils/validators");
 
-// ⚠️  NO auth middleware — testing phase
-router.post("/register", validate(registerSchema), ctrl.register);
-router.post("/login", validate(loginSchema), ctrl.login);
-router.get("/me", ctrl.me);           // still unprotected for testing
+// Optional: Uncomment if you are using your validation middleware
+// const { validate } = require("../middleware/validate.middleware");
+// const { registerSchema, loginSchema } = require("../utils/validators");
+
+// --- Traditional Auth ---
+router.post("/register", ctrl.register); // Add validate(registerSchema) if needed
+router.post("/login", ctrl.login);       // Add validate(loginSchema) if needed
+router.post("/signin", ctrl.login);      // Alias for frontend compatibility
+
+// --- Google OAuth ---
+router.post("/google", ctrl.google);
+
+// --- User Session ---
+router.get("/me", ctrl.me);
+
+// --- Logout ---
 router.post("/logout", ctrl.logout);
+router.post("/signout", ctrl.logout);    // Alias for frontend compatibility
 
 module.exports = router;
