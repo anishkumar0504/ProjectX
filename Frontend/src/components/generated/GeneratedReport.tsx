@@ -27,18 +27,21 @@ export const GeneratedReport: React.FC<GeneratedReportProps> = ({
     if (!response?.id) return;
 
     try {
+      // ✅ FIX: Use "authToken" (no underscore) to match the rest of your app
+      const token = localStorage.getItem("auth_token");
+
       // 1. Fetch the file as a Blob
       const res = await fetch(`${import.meta.env.VITE_API_URL}/documents/${response.id}/download`, {
         method: "GET",
         headers: {
-          // ✅ Future-proof: Add your auth token here when you enable multi-user
-          // "Authorization": `Bearer ${localStorage.getItem("token")}`
+          // ✅ Pass the auth token so the backend verifies ownership
+          ...(token && { "Authorization": `Bearer ${token}` })
         },
       });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || "Failed to download file");
+        throw new Error(errData.message || errData.error || "Failed to download file");
       }
 
       // 2. Convert response to a Blob

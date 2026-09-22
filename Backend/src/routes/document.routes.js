@@ -31,6 +31,7 @@ router.post(
 // ✅ DOWNLOAD ROUTE (Left public as requested)
 router.get(
   "/:id/download",
+  auth,
   ctrl.download
 );
 

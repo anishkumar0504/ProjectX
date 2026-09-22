@@ -180,6 +180,7 @@ const handleGenerate = async () => {
     setGenerationPhase("Complete!");
     setGeneratedResponse(res.document);
     goToStep(6);
+          window.dispatchEvent(new Event('credits-updated'));
   } catch (err: unknown) {
     setGenerationError(
       err instanceof Error ? err.message : "An unexpected error occurred while compiling the report."

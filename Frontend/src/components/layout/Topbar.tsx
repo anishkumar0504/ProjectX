@@ -37,9 +37,10 @@ export const Topbar: React.FC<TopbarProps> = ({ templateName }) => {
   }, [isDark]);
 
   // Fetch user session on mount
+  // Fetch user session on mount AND listen for credit updates
   useEffect(() => {
     const fetchUser = async () => {
-      // ✅ CHANGED: Use 'auth_token'
+      // ✅ KEPT EXACTLY AS IS: Use 'auth_token'
       const token = localStorage.getItem("auth_token");
       
       if (!token) {
@@ -72,7 +73,21 @@ export const Topbar: React.FC<TopbarProps> = ({ templateName }) => {
         setLoading(false);
       }
     };
+
+    // 1. Initial fetch on mount
     fetchUser();
+
+    // 2. ✅ NEW: Listen for the 'credits-updated' event to refresh credits dynamically
+    const handleCreditUpdate = () => {
+      fetchUser();
+    };
+
+    window.addEventListener('credits-updated', handleCreditUpdate);
+
+    // 3. Cleanup listener on unmount to prevent memory leaks
+    return () => {
+      window.removeEventListener('credits-updated', handleCreditUpdate);
+    };
   }, []);
 
   // Close dropdown on outside click

@@ -55,7 +55,7 @@ export async function generateReport(
   console.log(" FRONTEND SENDING referenceFile:", referenceFile ? referenceFile.name : "NULL");
   console.log(" FRONTEND SENDING shots count:", screenshots.length);
 
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem("auth_token");
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -74,7 +74,7 @@ export async function generateReport(
 }
 
 export async function downloadDocument(documentId: string): Promise<Blob> {
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem("auth_token");
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
