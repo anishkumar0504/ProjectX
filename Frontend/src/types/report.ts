@@ -18,6 +18,8 @@ export interface ReportTemplate {
   description: string;
   category: string;
   previewImageUrl?: string;
+    screenshots?: string[]; // ✅ Add this: Array of image URLs for the carousel/preview
+
   defaultTitle: string;
   fields: { id: string; label: string; type: string; required: boolean; defaultValue?: string }[];
   defaultSections: ReportSection[];

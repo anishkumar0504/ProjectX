@@ -7,6 +7,9 @@ import {
   Send,
   Download,
   Check,
+  Zap,
+  FileText,
+  Clock,
 } from "lucide-react";
 
 interface StepItem {
@@ -67,7 +70,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectStep,
 }) => {
   return (
-    <aside className="w-full lg:w-72 apple-glass-card lg:sticky lg:top-20 self-start rounded-3xl p-4 sm:p-5 flex flex-col justify-between shrink-0 transition-all">
+    <aside className="w-full lg:w-72 apple-glass-card lg:sticky lg:top-20 self-start rounded-3xl p-4 sm:p-5 flex flex-col justify-between shrink-0 transition-all h-[calc(100vh-6rem)]">
       <div>
         <div className="mb-4 px-2">
           <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
@@ -162,15 +165,47 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Footer Info Box */}
-      <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/10 px-2 text-[11px] text-neutral-500 dark:text-neutral-400">
-        <div className="flex items-center gap-1.5 font-medium text-neutral-700 dark:text-neutral-300">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-          <span>Institutional Compliant</span>
+      {/* Refined ProjectX Footer */}
+      <div className="mt-auto pt-5 border-t border-black/5 dark:border-white/10 px-1">
+        {/* Slogan Block */}
+        <div className="mb-4 pl-1">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-emerald-500 text-xs">✦</span>
+            <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200 tracking-tight">
+              For engineers who submit at 8:59 AM
+            </span>
+          </div>
+          <p className="text-[10px] leading-snug text-neutral-500 dark:text-neutral-400 pl-[18px]">
+            Your lab report, done before the coffee cools.
+          </p>
         </div>
-        <p className="mt-0.5 text-[10px] leading-tight text-neutral-400 dark:text-neutral-500">
-          Automatic A4 page layout & signature verification blocks.
-        </p>
+
+        {/* Feature Cards - Contained in a subtle background for professionalism */}
+        <div className="grid grid-cols-2 gap-2 mb-4 p-2 rounded-2xl bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.03] dark:border-white/[0.03]">
+          <div className="flex flex-col gap-1.5 px-1">
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3 h-3 text-amber-500 fill-amber-500/10" />
+              <span className="text-[9px] font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">AI Engine</span>
+            </div>
+            <span className="text-[9px] text-neutral-500 dark:text-neutral-400 leading-tight">GPT-4 + Claude stitching</span>
+          </div>
+          <div className="flex flex-col gap-1.5 px-1 border-l border-black/5 dark:border-white/5">
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3 h-3 text-blue-500" />
+              <span className="text-[9px] font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wide">Speed</span>
+            </div>
+            <span className="text-[9px] text-neutral-500 dark:text-neutral-400 leading-tight">~30s generation time</span>
+          </div>
+        </div>
+
+        {/* Status Line */}
+        <div className="flex items-center justify-between text-[10px] text-neutral-400 dark:text-neutral-500 pl-1">
+          <div className="flex items-center gap-1.5">
+            <FileText className="w-3 h-3" />
+            <span>.docx ready</span>
+          </div>
+          <span className="font-mono text-[9px] opacity-50">v1.0.0</span>
+        </div>
       </div>
     </aside>
   );

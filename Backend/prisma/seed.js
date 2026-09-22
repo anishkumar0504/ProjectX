@@ -30,6 +30,9 @@ const TEMPLATES = [
       { id: "conclusion", type: "conclusion", title: "Result / Conclusion", description: "", enabled: true, proof: "optional" },
     ]),
     defaultLayout: JSON.stringify({ mode: "perStep" }),
+     screenshots: JSON.stringify([
+      "/templates/cloud-computing-ec2-deployment/1.png",
+      "/templates/cloud-computing-ec2-deployment/2.png"    ]),
   },
 ];
 
