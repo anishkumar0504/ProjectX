@@ -132,11 +132,7 @@ export const Topbar: React.FC<TopbarProps> = ({ templateName }) => {
             <h1 className="text-sm sm:text-base font-semibold tracking-tight text-neutral-900 dark:text-white">
               ProjectX
             </h1>
-            {templateName && (
-              <span className="text-xs text-neutral-500 dark:text-neutral-400 hidden md:inline">
-                / {templateName}
-              </span>
-            )}
+            
           </div>
         </div>
 

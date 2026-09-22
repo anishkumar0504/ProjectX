@@ -1,58 +1,57 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Check, Zap, Crown, CreditCard, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Zap, Crown, CreditCard, Loader2, FileText } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
-interface Plan {
-  id: string;
-  name: string;
-  originalPrice: number;
-  price: number;
-  credits: number;
-  features: string[];
-  popular?: boolean;
-}
-
-const PLANS: Plan[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    originalPrice: 69,
-    price: 49,
-    credits: 50,
-    features: ["50 Processing Credits", "30-day validity", "Standard support"],
-  },
-  {
-    id: "pro",
-    name: "PRO MODE",
-    originalPrice: 249,
-    price: 149,
-    credits: 200,
-    features: [
-      "200 Processing Credits",
-      "60-day validity",
-      "Priority processing",
-      "Batch uploads",
-      "Advanced analytics",
-    ],
-    popular: true,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    originalPrice: 799,
-    price: 499,
-    credits: 1000,
-    features: [
-      "1000 Processing Credits",
-      "90-day validity",
-      "Highest priority",
-      "Dedicated support",
-      "Custom integrations",
-      "Team collaboration",
-    ],
-  },
-];
+// ✅ CONFIGURATION JSON (Edit this to change prices/credits)
+const SUBSCRIPTION_CONFIG = {
+  conversionRate: 10, // 10 Credits = 1 File Generation
+  plans: [
+    {
+      id: "starter",
+      name: "Starter Pack",
+      originalPrice: 69,
+      price: 49,
+      credits: 50, // Equals 5 Files
+      features: [
+        "50 Processing Credits",
+        "Valid for 30 days",
+        "Standard AI Speed",
+        "Basic Support"
+      ],
+    },
+    {
+      id: "pro",
+      name: "PRO MODE",
+      originalPrice: 249,
+      price: 149,
+      credits: 200, // Equals 20 Files
+      features: [
+        "200 Processing Credits",
+        "Valid for 60 days",
+        "Priority GPT-4 + Claude",
+        "Batch Screenshot Uploads",
+        "Advanced Formatting"
+      ],
+      popular: true,
+    },
+    {
+      id: "enterprise",
+      name: "Semester Pass",
+      originalPrice: 799,
+      price: 499,
+      credits: 1000, // Equals 100 Files
+      features: [
+        "1000 Processing Credits",
+        "Valid for 90 days",
+        "Highest Priority Processing",
+        "Custom College Templates",
+        "Unlimited Batch Uploads",
+        "Dedicated Support"
+      ],
+    },
+  ],
+};
 
 const SubscribePage: React.FC = () => {
   const [credits, setCredits] = useState<number>(0);
@@ -61,11 +60,8 @@ const SubscribePage: React.FC = () => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      // ✅ Use auth_token to match Topbar
       const token = localStorage.getItem("auth_token");
-      
       if (!token) {
-        // If no token, redirect to auth
         window.location.href = "/auth";
         return;
       }
@@ -79,7 +75,6 @@ const SubscribePage: React.FC = () => {
         
         const data = await res.json();
         if (data.user) {
-          // ✅ Set exact credits from backend (e.g., 0, 10, or any other amount)
           setCredits(data.user.credits ?? 0);
         }
       } catch (err) {
@@ -94,13 +89,12 @@ const SubscribePage: React.FC = () => {
   const handlePurchase = async (planId: string) => {
     setProcessing(planId);
     try {
-      // TODO: Replace with actual payment gateway integration (Razorpay/Stripe)
-      // For now, simulating a successful purchase
+      // TODO: Integrate Razorpay/Stripe here
       await new Promise((r) => setTimeout(r, 2000));
       
-      alert(`Successfully purchased ${PLANS.find((p) => p.id === planId)?.credits} credits!`);
+      alert(`Successfully purchased! Your balance has been updated.`);
       
-      // Refresh user data to show new balance
+      // Refresh balance
       const token = localStorage.getItem("auth_token");
       if (token) {
         const res = await fetch(`${API_URL}/auth/me`, {
@@ -111,7 +105,6 @@ const SubscribePage: React.FC = () => {
       }
     } catch (err) {
       console.error("Purchase failed:", err);
-      alert("Payment failed. Please try again.");
     } finally {
       setProcessing(null);
     }
@@ -129,8 +122,7 @@ const SubscribePage: React.FC = () => {
   }
 
   return (
-    // ✅ Dark Theme Only Background
-    <div className="min-h-screen bg-neutral-950 text-white selection:bg-blue-500/30">
+    <div className="min-h-screen bg-neutral-950 text-white selection:bg-blue-500/30 font-sans">
       
       {/* Sticky Header */}
       <div className="sticky top-0 z-40 backdrop-blur-xl bg-neutral-950/80 border-b border-white/10">
@@ -142,37 +134,55 @@ const SubscribePage: React.FC = () => {
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
           
-          {/* Current Balance Display */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900 border border-white/10">
             <CreditCard className="w-4 h-4 text-amber-500" />
             <span className="text-sm font-semibold text-neutral-200">
               {credits} Credits
+            </span>
+            <span className="text-xs text-neutral-500 ml-1">
+              (~{Math.floor(credits / SUBSCRIPTION_CONFIG.conversionRate)} files)
             </span>
           </div>
         </div>
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-        {/* Hero */}
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6">
-            <Zap className="w-4 h-4 text-amber-400" />
-            <span className="text-xs font-bold tracking-wide text-amber-400 uppercase">
-              Pro Mode Unlocked
+        
+        {/* Hero Section with Slogan */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
+            <Zap className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-bold tracking-wide text-blue-400 uppercase">
+              For Engineers Who Submit at 8:59 AM
             </span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-4">
-            Choose Your Credit Pack
+          
+          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-white mb-6">
+            Your lab report, done <br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+              before the coffee cools.
+            </span>
           </h1>
-          <p className="text-lg text-neutral-400 max-w-xl mx-auto">
-            Premium processing credits with instant activation and volume discounts.
+          
+          <p className="text-lg text-neutral-400 max-w-2xl mx-auto mb-8">
+            Stop stitching screenshots. ProjectX turns your AWS console captures into a submission-ready 
+            <span className="text-white font-semibold"> .DOCX </span> 
+            in the exact college format.
           </p>
+
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-neutral-500">
+            <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-green-500" /> GPT-4 + Claude</span>
+            <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-green-500" /> ~30s Generation</span>
+            <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-green-500" /> 100% Template Match</span>
+          </div>
         </div>
 
         {/* Pricing Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
-          {PLANS.map((plan) => {
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+          {SUBSCRIPTION_CONFIG.plans.map((plan) => {
             const discount = getDiscount(plan.originalPrice, plan.price);
+            const fileCount = Math.floor(plan.credits / SUBSCRIPTION_CONFIG.conversionRate);
+            
             return (
               <div
                 key={plan.id}
@@ -202,18 +212,36 @@ const SubscribePage: React.FC = () => {
                   </span>
                 </div>
 
-                {/* Credits Highlight */}
-                <div className="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                  <p className="text-xs text-neutral-400 mb-1">You receive</p>
-                  <p className="text-3xl font-bold text-amber-400">{plan.credits}</p>
-                  <p className="text-xs text-neutral-500">processing credits</p>
+                {/* Credits & File Conversion Highlight */}
+                <div className="mb-6 p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                  <div className="flex justify-between items-end mb-2">
+                    <div>
+                      <p className="text-xs text-neutral-400 mb-1">You receive</p>
+                      <p className="text-3xl font-bold text-blue-400">{plan.credits}</p>
+                      <p className="text-xs text-neutral-500">processing credits</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-neutral-400 mb-1">Equals</p>
+                      <div className="flex items-center gap-1 justify-end text-amber-400 font-bold">
+                        <FileText className="w-4 h-4" />
+                        <span className="text-xl">{fileCount}</span>
+                      </div>
+                      <p className="text-[10px] text-neutral-500">lab reports</p>
+                    </div>
+                  </div>
+                  <div className="w-full bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-blue-500 h-full w-full opacity-50"></div>
+                  </div>
+                  <p className="text-[10px] text-neutral-500 mt-1 text-center">
+                    10 Credits = 1 File Generation
+                  </p>
                 </div>
 
                 {/* Features */}
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((f, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-sm text-neutral-300">
-                      <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                      <Check className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                       {f}
                     </li>
                   ))}
@@ -242,8 +270,8 @@ const SubscribePage: React.FC = () => {
         </div>
 
         {/* Trust Badges */}
-        <div className="mt-16 flex flex-wrap justify-center gap-6 text-xs text-neutral-500">
-          {["Secure Payment", "Instant Activation", "24/7 Support", "Money-back Guarantee"].map((label) => (
+        <div className="mt-16 flex flex-wrap justify-center gap-8 text-xs text-neutral-500">
+          {["Secure Payment", "Instant Activation", "College Format Guaranteed", "No Hidden Fees"].map((label) => (
             <div key={label} className="flex items-center gap-1.5">
               <Check className="w-3.5 h-3.5 text-neutral-600" />
               {label}
