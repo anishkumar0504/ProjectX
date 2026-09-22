@@ -165,7 +165,7 @@ const SubscribePage: React.FC = () => {
           </h1>
           
           <p className="text-lg text-neutral-400 max-w-2xl mx-auto mb-8">
-            Stop stitching screenshots. ProjectX turns your AWS console captures into a submission-ready 
+            Stop stitching screenshots. ProjectX turns your LABS captures into a submission-ready 
             <span className="text-white font-semibold"> .DOCX </span> 
             in the exact college format.
           </p>

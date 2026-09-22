@@ -139,34 +139,32 @@ export const Topbar: React.FC<TopbarProps> = ({ templateName }) => {
         {/* Right Controls */}
         <div className="flex items-center gap-2">
           
-          {/* Dynamic Credits Button */}
-          {user ? (
-            user.credits > 0 ? (
-              // CASE 1: User HAS credits -> Show Balance + Add Button
-              <a
-                href="/subscribe"
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-black/5 dark:border-white/10 transition-all group"
-              >
-                <div className="flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
-                  <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-                    {user.credits}
-                  </span>
-                </div>
-                <div className="w-px h-3 bg-neutral-300 dark:bg-neutral-600 mx-1" />
-                <Plus className="w-3.5 h-3.5 text-neutral-500 group-hover:text-blue-500 transition-colors" />
-              </a>
-            ) : (
-              // CASE 2: User has NO credits -> Show "Get Credits" Button
-              <a
-                href="/subscribe"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20 transition-all active:scale-95"
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                <span className="text-xs font-bold">Get Credits</span>
-              </a>
-            )
-          ) : null}
+       {/* Dynamic Credits Button */}
+{user ? (
+  user.credits > 0 ? (
+    <a
+      href="/subscribe"
+      className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-black/5 dark:border-white/10 transition-all group"
+    >
+      <div className="flex items-center gap-1.5">
+        <CreditCard className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
+        <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
+          {user.credits}
+        </span>
+      </div>
+      <div className="w-px h-3 bg-neutral-300 dark:bg-neutral-600 mx-1" />
+      <Plus className="w-3.5 h-3.5 text-neutral-500 group-hover:text-blue-500 transition-colors" />
+    </a>
+  ) : (
+    <a
+      href="/subscribe"
+      className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20 transition-all active:scale-95"
+    >
+      <CreditCard className="w-3.5 h-3.5" />
+      <span className="text-xs font-bold">Get Credits</span>
+    </a>
+  )
+) : null}
 
           {/* Theme Switcher (Left of Profile) */}
           <button
