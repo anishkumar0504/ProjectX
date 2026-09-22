@@ -7,8 +7,8 @@ const TEMPLATE_FILE = path.join(__dirname, "../templates/vpc-endpoint.json");
 
 const TEMPLATES = [
   {
-    slug: "vpc-endpoint-s3",
-    name: "Access S3 from Private EC2 via VPC Endpoint",
+    slug: "cloud-computing-ec2-deployment",
+    name: "Deploying a Web Application on AWS EC2",
     description: "Gateway VPC Endpoint for private S3 access from a private EC2 instance.",
     subject: "Cloud Architecture and Services",
     defaultContent: JSON.stringify(JSON.parse(fs.readFileSync(TEMPLATE_FILE, "utf8"))),
@@ -35,6 +35,10 @@ const TEMPLATES = [
 
 
 async function main() {
+   console.log("🧹 Clearing existing templates from database...");
+  await prisma.template.deleteMany();
+  console.log("✅ Old templates cleared.");
+
   for (const t of TEMPLATES) {
     await prisma.template.upsert({
       where: { slug: t.slug },

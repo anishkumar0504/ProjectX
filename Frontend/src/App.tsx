@@ -8,6 +8,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google"; // ✅ Import the pro
 import { SmoothScroll } from "./components/SmoothScroll";
 import { ReportGenerator } from "./pages/ReportGenerator";
 import Auth from "../src/pages/AuthPage"; 
+import Subscribe from "../src/components/Payment/SubscribePage"; // ✅ New import for the Subscribe page
 
 // ✅ Get your Google Client ID from the environment variables
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_FALLBACK_CLIENT_ID.apps.googleusercontent.com";
@@ -47,6 +48,16 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <ReportGenerator />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* 💳 Protected Route: Subscription Management */}
+            <Route
+              path="/subscribe"
+              element={
+                <ProtectedRoute>
+                  <Subscribe />
                 </ProtectedRoute>
               }
             />
