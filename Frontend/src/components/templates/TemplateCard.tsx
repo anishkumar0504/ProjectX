@@ -208,7 +208,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                 src={allImageUrls[zoomIndex]}
                 alt={`${template.name} view ${zoomIndex + 1}`}
                 className="max-w-full max-h-[75vh] object-contain rounded-lg"
-                onError={(e) => {
+                onError={() => {
                   console.error("Failed to load zoomed image:", allImageUrls[zoomIndex]);
                 }}
               />
