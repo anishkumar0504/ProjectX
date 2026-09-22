@@ -9,8 +9,8 @@ interface TopbarProps {
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
-export const Topbar: React.FC<TopbarProps> = ({ templateName }) => {
-  const [isDark, setIsDark] = useState<boolean>(() => {
+export const Topbar: React.FC<TopbarProps> = () => {
+      const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("theme");
       if (saved) return saved === "dark";

@@ -31,8 +31,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
   const [hoverIndex, setHoverIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(0);
-  const hoverIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
+const hoverIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // ✅ Hover sliding logic
   const startHoverSlide = () => {
     if (screenshotUrls.length > 1) {
@@ -181,7 +180,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             {/* Main Zoomed Image */}
             <div className="relative bg-neutral-900 rounded-2xl overflow-hidden border border-white/10 aspect-video">
               <img
-                src={screenshotUrls[zoomIndex]}
+src={screenshotUrls[zoomIndex] ?? undefined}
                 alt={`${template.name} screenshot ${zoomIndex + 1}`}
                 className="w-full h-full object-contain"
               />
@@ -217,7 +216,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
                         : "border-white/20 opacity-50 hover:opacity-100"
                     }`}
                   >
-                    <img src={url} alt={`Thumbnail ${idx + 1}`} className="w-24 h-16 object-cover" />
+<img src={url ?? undefined} alt={`Thumbnail ${idx + 1}`} className="w-24 h-16 object-cover" />
                   </button>
                 ))}
               </div>
