@@ -92,7 +92,7 @@ class AuthService {
           name: googleProfile.name,
           provider: "GOOGLE",      // Matches Prisma schema (uppercase)
           providerId: googleProfile.sub, // Save Google's unique ID
-          credits: 10,             // Welcome bonus
+          credits: 20,             // Welcome bonus
         },
       });
     } else if (user.provider !== "GOOGLE") {
