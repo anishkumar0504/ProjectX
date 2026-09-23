@@ -82,7 +82,7 @@ export const ScreenshotUploader: React.FC<ScreenshotUploaderProps> = ({
             Verification Screenshots
           </h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Upload all your screenshots. Gemini will automatically place them in the correct steps.
+            Upload all your screenshots. ProjectX AI will automatically place them in the correct steps.
           </p>
         </div>
       </div>

@@ -46,7 +46,7 @@ export const ReferenceUploader: React.FC<ReferenceUploaderProps> = ({
               Upload Reference Steps (Optional)
             </h3>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Upload your own .docx file with steps/notes. Gemini will use this as the source of truth.
+              Upload your own .docx file with steps/notes. ProjectX AI will use this as the source of truth.
             </p>
           </div>
         </div>
@@ -108,7 +108,7 @@ export const ReferenceUploader: React.FC<ReferenceUploaderProps> = ({
               Additional Instructions (Optional)
             </h3>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Add extra context or requirements for Gemini to consider.
+              Add extra context or requirements for ProjectX AI to consider.
             </p>
           </div>
         </div>

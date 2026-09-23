@@ -167,7 +167,7 @@ const handleGenerate = async () => {
 };
 
     setGenerationProgress(70);
-    setGenerationPhase("Synthesizing document via Gemini & DocBuilder...");
+    setGenerationPhase("Synthesizing document via ProjectX AI & DocBuilder...");
 
     const screenshotFiles = uploadedScreenshots.map((sc) => ({
       sectionId: "auto",
