@@ -57,7 +57,7 @@ class AuthService {
         name,
         password: hashedPassword,
         provider: "LOCAL", // Matches Prisma schema
-        credits: 0,
+        credits: 20,
       },
     });
 
