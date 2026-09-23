@@ -47,8 +47,8 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
     addUrl(template.previewImageUrl);
     parsedScreenshots.forEach(addUrl);
 
-    if (urls.length === 0 && process.env.NODE_ENV !== "production") {
-      console.warn(`[TemplateCard] "${template.name}" resolved 0 image URLs.`, {
+if (urls.length === 0 && import.meta.env.DEV) {
+        console.warn(`[TemplateCard] "${template.name}" resolved 0 image URLs.`, {
         previewImageUrl: template.previewImageUrl,
         rawScreenshots: template.screenshots,
         parsedScreenshots,
@@ -58,8 +58,8 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
     return urls;
   }, [template.previewImageUrl, parsedScreenshots, template.name, template.screenshots]);
 
-  const mainImageUrl = allImageUrls[0] || null;
-  const hasImages = allImageUrls.length > 0;
+  // const mainImageUrl = allImageUrls[0] || null;
+  // const hasImages = allImageUrls.length > 0;
 
   const [hoverIndex, setHoverIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -203,7 +203,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           </p>
           <div className="pt-2 flex items-center gap-2">
             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-neutral-700 dark:text-neutral-300">
-              {template.category || template.subject}
+{template.category || template.name}
             </span>
           </div>
         </div>

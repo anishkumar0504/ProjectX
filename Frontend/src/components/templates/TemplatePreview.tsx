@@ -109,7 +109,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({
 
       <div className="absolute top-2.5 right-2.5 z-10">
         <span className="text-[9px] px-2 py-0.5 rounded-full bg-black/80 dark:bg-white/90 text-white dark:text-black font-sans font-medium tracking-wide backdrop-blur-xs">
-          {template.badge || template.category || template.subject}
+{template.badge || template.category || template.name}
         </span>
       </div>
     </div>
