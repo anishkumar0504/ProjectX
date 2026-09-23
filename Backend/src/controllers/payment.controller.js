@@ -1,4 +1,4 @@
-const razorpayService = require("../services/razorpay.service");
+const razorpayService = require("../services/Razorpay.service");
 
 // GET /api/payment/plans (public)
 async function getPlans(req, res) {
