@@ -12,7 +12,7 @@ const features = [
     title: "Custom Templates",
     desc: "Upload your own college PDF formats and we'll match them perfectly.",
   },
-.  {
+  {
     icon: <Eye className="w-5 h-5 text-purple-500" />,
     title: "Context Previews",
     desc: "See exactly what ProjectX is going to add to your PDF before generating.",
