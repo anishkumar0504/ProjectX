@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Moon, Sun, FileSpreadsheet, LogOut, CreditCard, ChevronDown, User, Plus } from "lucide-react";
+import { Moon, Sun, LogOut, CreditCard, ChevronDown, User, Plus } from "lucide-react";
 
 interface TopbarProps {
   currentStep: number;
