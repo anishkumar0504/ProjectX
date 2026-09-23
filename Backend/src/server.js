@@ -10,7 +10,7 @@ const config = require("./config");
 console.log("🔑 DEBUG - GEMINI KEY:", process.env.GEMINI_API_KEY ? `LOADED (Starts with: ${process.env.GEMINI_API_KEY.substring(0, 6)}...)` : "NOT FOUND (undefined)");
 
 const app = express();
-
+app.set('trust proxy', 1); // required on Render so req.ip is the real client IP, not Render's proxy
 // ensure upload dirs
 for (const d of ["uploads/temp", "uploads/outputs"]) {
   fs.mkdirSync(path.join(__dirname, "..", d), { recursive: true });
