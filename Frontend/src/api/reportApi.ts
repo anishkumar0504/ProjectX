@@ -52,9 +52,7 @@ export async function generateReport(
     formData.append("reference", referenceFile);
   }
 
-  console.log(" FRONTEND SENDING referenceFile:", referenceFile ? referenceFile.name : "NULL");
-  console.log(" FRONTEND SENDING shots count:", screenshots.length);
-
+  
   const token = localStorage.getItem("auth_token");
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;

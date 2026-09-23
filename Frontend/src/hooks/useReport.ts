@@ -19,7 +19,6 @@ export function useReport() {
     async function load() {
       try {
         const data = await fetchTemplates();
-        console.log("✅ Templates loaded:", data.length); // Debug log
         setTemplates(data);
       } catch (err) {
         console.error("❌ Failed to load templates:", err);
@@ -54,9 +53,6 @@ export function useReport() {
     if (templates.length > 0 && !isInitialized) {
       const first = templates[0];
       
-      console.log("🔍 DEBUG: Template loaded:", first.slug);
-      console.log("🔍 DEBUG: first.defaultSections:", first.defaultSections);
-      console.log("🔍 DEBUG: Is Array?", Array.isArray(first.defaultSections));
 
       let safeSections: any[] = [];
 
@@ -89,7 +85,6 @@ export function useReport() {
         ];
       }
 
-      console.log("✅ FINAL safeSections (Length:", safeSections.length, "):", safeSections);
 
       setReport((prev) => ({
         ...prev,
@@ -120,7 +115,6 @@ export function useReport() {
       console.error("Template not found:", templateId);
       return;
     }
-    console.log(" Selected template:", template.name);
     setReport({
       templateId: template.id,
       formData: getInitialFormData(template),

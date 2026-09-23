@@ -18,7 +18,7 @@ for (const d of ["uploads/temp", "uploads/outputs"]) {
 
 // 👇 ADD THIS LINE to serve the preview PNGs from the public/previews folder
 app.use("/previews", express.static(path.join(__dirname, "..", "public", "previews")));
-
+app.use("/templates", express.static(path.join(__dirname, "..", "public","templates")));
 app.use(cors());
 app.use(
   "/api/payment/webhook",

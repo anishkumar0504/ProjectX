@@ -46,6 +46,8 @@ export async function fetchTemplates(): Promise<ReportTemplate[]> {
       description: t.description,
       category: t.subject || "General",
       previewImageUrl: t.previewImageUrl,
+        screenshots: t.screenshots ?? [],   // ← ADD THIS LINE
+
       defaultTitle: `Practical: ${t.name}`,
      fields: [
     { id: "studentName", label: "Student Name", type: "text", required: true, defaultValue: "" },

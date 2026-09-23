@@ -19,7 +19,6 @@ export const ReferenceUploader: React.FC<ReferenceUploaderProps> = ({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file && file.name.endsWith(".docx")) {
-          console.log("✅ File selected in UI:", file.name); // Add this to verify
 
       onFileChange(file);
     } else if (file) {
