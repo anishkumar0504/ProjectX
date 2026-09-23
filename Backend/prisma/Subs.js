@@ -8,7 +8,7 @@ const plans = [
     id: "starter",
     name: "Starter Pack",
     originalPrice: 69,
-    price: 1,
+    price: 49,
     credits: 50, // 5 files
     features: [
       "50 Processing Credits",
