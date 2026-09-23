@@ -139,17 +139,17 @@ export const Topbar: React.FC<TopbarProps> = () => {
       <div className="max-w-[1440px] mx-auto apple-glass rounded-2xl sm:rounded-full px-4 sm:px-6 h-14 flex items-center justify-between">
         
         {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shadow-xs">
-            <FileSpreadsheet className="w-4 h-4" />
-          </div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-sm sm:text-base font-semibold tracking-tight text-neutral-900 dark:text-white">
-              ProjectX
-            </h1>
-            
-          </div>
-        </div>
+    <div className="flex items-center gap-3">
+      <div className="w-8 h-8 rounded-xl overflow-hidden shadow-xs">
+        <img src="/logo.png" alt="ProjectX logo" className="w-full h-full object-cover" />
+      </div>
+      <div className="flex items-center gap-2.5">
+        <h1 className="text-sm sm:text-base font-semibold tracking-tight text-neutral-900 dark:text-white">
+          ProjectX
+        </h1>
+        
+      </div>
+    </div>
 
         {/* Right Controls */}
         <div className="flex items-center gap-2">
