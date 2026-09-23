@@ -4,14 +4,15 @@ const ctrl = require("../controllers/document.controller");
 const { uploadDocumentFiles } = require("../middleware/upload.middleware");
 const { validate } = require("../middleware/validate.middleware");
 const { generateDocSchema } = require("../utils/validators");
+const { generationLimiter } = require("../middleware/express-rate-limit"); // adjust path as needed
 
-// ✅ 1. UNCOMMENTED: Import the auth middleware
 const auth = require("../middleware/auth.middleware"); 
 
 // Generate Document
 router.post(
   "/generate",
-  auth, // ✅ 2. APPLIED HERE ONLY: Protects credit deduction and ensures req.user is set
+  auth,              // must run first so req.user exists
+  generationLimiter, // ✅ throttles AI/generation calls per user or IP
   uploadDocumentFiles,
   (req, res, next) => {
     for (const k of ["meta", "sections"]) {
@@ -28,14 +29,14 @@ router.post(
   ctrl.generate
 );
 
-// ✅ DOWNLOAD ROUTE (Left public as requested)
+// DOWNLOAD ROUTE
 router.get(
   "/:id/download",
   auth,
   ctrl.download
 );
 
-// ✅ LIST & GET ROUTES (Left public as requested)
+// LIST & GET ROUTES
 router.get("/", ctrl.list);
 router.get("/:id", ctrl.get);
 
