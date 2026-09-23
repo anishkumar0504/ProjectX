@@ -71,7 +71,7 @@ export const ReportGenerator: React.FC = () => {
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-neutral-900 dark:text-white mx-auto" />
           <p className="text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            Loading institutional templates...
+            Loading...
           </p>
         </div>
       </div>
