@@ -21,24 +21,21 @@ export async function fetchTemplates(): Promise<ReportTemplate[]> {
     conclusion: { title: "Result / Conclusion", description: "Final summary of the practical." },
   };
 
-  return data.templates.map((t: any) => {
-    const defaultSections: ReportSection[] = [];
-    Object.entries(t.defaultSections || {}).forEach(([key, isEnabled]) => {
-      if (isEnabled && sectionMap[key]) {
-        defaultSections.push({
-          id: key,
-          title: sectionMap[key].title,
-          description: sectionMap[key].description,
-          enabled: true,
-                    screenshotRequired: key === "steps" || key === "verification",
-
-          proof: (key === "steps" || key === "verification") ? "required" : "optional", // ✅ Added
-          isCustom: false,
-          content: "",
-        });
-      }
-    });
-
+    return data.templates.map((t: any) => {
+    const defaultSections: ReportSection[] = Array.isArray(t.defaultSections)
+      ? t.defaultSections
+          .filter((s: any) => s.enabled !== false)
+          .map((s: any) => ({
+            id: s.id,
+            title: s.title || sectionMap[s.id]?.title || s.id,
+            description: s.description || sectionMap[s.id]?.description || "",
+            enabled: true,
+            screenshotRequired: s.id === "steps" || s.id === "verification",
+            proof: (s.id === "steps" || s.id === "verification") ? "required" : "optional",
+            isCustom: false,
+            content: "",
+          }))
+      : [];
     return {
       id: t.id,
       slug: t.slug,

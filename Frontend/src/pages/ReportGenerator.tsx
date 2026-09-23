@@ -349,31 +349,26 @@ const handleGenerate = async () => {
         )}
 
         {/* STEP 3: CONFIGURE SECTIONS */}
-        {report.currentStep === 3 && (
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-neutral-800 dark:text-neutral-200">
-                  Step 3 of 6
-                </span>
-                <h2 className="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">
-                  Configure Sections
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                Customize report sections, toggle verification proofs, reorder sequence, or insert custom sections.
-              </p>
-            </div>
-            <SectionList
-              sections={report.sections}
-              onToggleEnabled={toggleSection}
-              onToggleScreenshot={toggleScreenshotRequired}
-              onUpdateSection={updateSection}
-              onDeleteSection={deleteSection}
-              onMoveSection={moveSection}
-              onAddCustomSection={addCustomSection}
-              validationError={stepErrors[0]}
-            />
+{report.currentStep === 3 && (
+  <div className="space-y-6">
+    {/* ...header stuff stays... */}
+    {report.sections.length === 0 ? (
+      <div className="apple-glass-card rounded-2xl p-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+        <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
+        Sections are still loading for this template. Please wait a moment.
+      </div>
+    ) : (
+      <SectionList
+        sections={report.sections}
+        onToggleEnabled={toggleSection}
+        onToggleScreenshot={toggleScreenshotRequired}
+        onUpdateSection={updateSection}
+        onDeleteSection={deleteSection}
+        onMoveSection={moveSection}
+        onAddCustomSection={addCustomSection}
+        validationError={stepErrors[0]}
+      />
+    )}
             <div className="pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
               <button type="button" onClick={prevStep} className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full transition-colors">
                 <ArrowLeft className="w-3.5 h-3.5" />

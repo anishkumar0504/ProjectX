@@ -8,7 +8,7 @@ const plans = [
     id: "starter",
     name: "Starter Pack",
     originalPrice: 69,
-    price: 49,
+    price: 1,
     credits: 50, // 5 files
     features: [
       "50 Processing Credits",
@@ -17,6 +17,7 @@ const plans = [
       "Basic Support",
     ],
     popular: false,
+    isActive: true,
   },
   {
     id: "pro",
@@ -32,6 +33,7 @@ const plans = [
       "Advanced Formatting",
     ],
     popular: true,
+    isActive: true,
   },
   {
     id: "enterprise",
@@ -48,10 +50,24 @@ const plans = [
       "Dedicated Support",
     ],
     popular: false,
+    isActive: true,
   },
 ];
 
 async function main() {
+  const currentIds = plans.map((p) => p.id);
+
+  // Clear: deactivate any old plans not present in this list anymore.
+  // Deactivate (not delete) so existing Orders with a planId FK don't break.
+  const stale = await prisma.plan.updateMany({
+    where: { id: { notIn: currentIds } },
+    data: { isActive: false },
+  });
+  if (stale.count > 0) {
+    console.log(`Deactivated ${stale.count} stale plan(s) not in current list`);
+  }
+
+  // Publish: upsert current plans
   for (const plan of plans) {
     await prisma.plan.upsert({
       where: { id: plan.id },
