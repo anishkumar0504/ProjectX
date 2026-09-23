@@ -45,11 +45,11 @@ export async function fetchTemplates(): Promise<ReportTemplate[]> {
       previewImageUrl: t.previewImageUrl,
         screenshots: t.screenshots ?? [],   // ← ADD THIS LINE
 
-      defaultTitle: `Practical: ${t.name}`,
+defaultTitle: "",   // was `Practical: ${t.name}`
      fields: [
     { id: "studentName", label: "Student Name", type: "text", required: true, defaultValue: "" },
     { id: "prn", label: "PRN", type: "text", required: true, defaultValue: "" },
-    { id: "facultyName", label: "Faculty Name", type: "text", required: true, defaultValue: t.defaultMeta?.facultyName || "" },
+  { id: "facultyName", label: "Faculty Name", type: "text", required: true, defaultValue: "" }, // was t.defaultMeta?.facultyName
   ],
       defaultSections,
       headerConfig: {
