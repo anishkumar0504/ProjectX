@@ -22,6 +22,7 @@ import {
   GraduationCap,
   Sparkles,
   FileDown,
+  X, // Added for the close button
 } from "lucide-react";
 
 export const ReportGenerator: React.FC = () => {
@@ -55,7 +56,10 @@ export const ReportGenerator: React.FC = () => {
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generatedResponse, setGeneratedResponse] = useState<GeneratedDocumentResponse | null>(null);
 
-  // NEW: Flat screenshot state (Gemini handles the section mapping automatically)
+  // NEW: Token modal state
+  const [showTokenModal, setShowTokenModal] = useState(false);
+
+  // Flat screenshot state (Gemini handles the section mapping automatically)
   const [uploadedScreenshots, setUploadedScreenshots] = useState<ScreenshotFile[]>([]);
   
   // Reference state
@@ -95,7 +99,7 @@ export const ReportGenerator: React.FC = () => {
     );
   }
 
-    const handleNext = () => {
+  const handleNext = () => {
     // Step 4 (Screenshots & References) is entirely optional.
     // We bypass the old useReport validation that might be blocking it.
     if (report.currentStep === 4) {
@@ -124,74 +128,79 @@ export const ReportGenerator: React.FC = () => {
     goToStep(step);
   };
 
-const handleGenerate = async () => {
-  setIsGenerating(true);
-  setGenerationError(null);
-  setGenerationProgress(15);
-  setGenerationPhase("Preparing payload and assets...");
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setGenerationError(null);
+    setShowTokenModal(false); // Reset modal state
+    setGenerationProgress(15);
+    setGenerationPhase("Preparing payload and assets...");
 
-  try {
-    setGenerationProgress(40);
-    setGenerationPhase("Uploading to generation engine...");
+    try {
+      setGenerationProgress(40);
+      setGenerationPhase("Uploading to generation engine...");
 
-    const sectionsPayload = report.sections.map((s) => ({
-      id: s.id,
-      type: s.type || (["aim", "objectives", "services", "prerequisites", "architecture", "steps", "verification", "expectedOutput", "conclusion"].includes(s.id) ? s.id : "custom"),
-      title: s.title,
-      enabled: s.enabled !== false,
-      proof: s.proof || (["verification", "expectedOutput"].includes(s.id) ? "required" : "optional"),
-      prompt: s.prompt || "",
-    }));
+      const sectionsPayload = report.sections.map((s) => ({
+        id: s.id,
+        type: s.type || (["aim", "objectives", "services", "prerequisites", "architecture", "steps", "verification", "expectedOutput", "conclusion"].includes(s.id) ? s.id : "custom"),
+        title: s.title,
+        enabled: s.enabled !== false,
+        proof: s.proof || (["verification", "expectedOutput"].includes(s.id) ? "required" : "optional"),
+        prompt: s.prompt || "",
+      }));
 
-    // ✅ FIX 1: Check if there are enabled custom sections
-    const hasCustomSections = sectionsPayload.some(s => s.type === "custom" && s.enabled);
+      const hasCustomSections = sectionsPayload.some(s => s.type === "custom" && s.enabled);
 
-    const payload = {
-      templateSlug: selectedTemplate.slug,
-      meta: {
-        studentName: report.formData["studentName"] || "",
-        prn: report.formData["prn"] || "",
-        facultyName: report.formData["facultyName"] || "",
-        title: report.title,
-      },
-      sections: JSON.stringify(sectionsPayload),
-      imageLayout: "perStep" as const,
-      // ✅ FIX 2: Force Gemini if there are custom sections, even without screenshots
-     useGemini: uploadedScreenshots.length > 0 || 
-             !!referenceFile || 
-             !!referenceText || 
-             hasCustomSections ||
-             report.title !== selectedTemplate.defaultTitle, 
-             
-  allowMissingProof: false,
-};
+      const payload = {
+        templateSlug: selectedTemplate.slug,
+        meta: {
+          studentName: report.formData["studentName"] || "",
+          prn: report.formData["prn"] || "",
+          facultyName: report.formData["facultyName"] || "",
+          title: report.title,
+        },
+        sections: JSON.stringify(sectionsPayload),
+        imageLayout: "perStep" as const,
+        useGemini: uploadedScreenshots.length > 0 || 
+                   !!referenceFile || 
+                   !!referenceText || 
+                   hasCustomSections ||
+                   report.title !== selectedTemplate.defaultTitle, 
+        allowMissingProof: false,
+      };
 
-    setGenerationProgress(70);
-    setGenerationPhase("Synthesizing document via ProjectX AI & DocBuilder...");
+      setGenerationProgress(70);
+      setGenerationPhase("Synthesizing document via ProjectX AI & DocBuilder...");
 
-    const screenshotFiles = uploadedScreenshots.map((sc) => ({
-      sectionId: "auto",
-      file: sc.file,
-    }));
+      const screenshotFiles = uploadedScreenshots.map((sc) => ({
+        sectionId: "auto",
+        file: sc.file,
+      }));
 
-    const res = await generateReport(payload, screenshotFiles, referenceFile, referenceText);
-    
-    setGenerationProgress(100);
-    setGenerationPhase("Complete!");
-    setGeneratedResponse(res.document);
-    goToStep(6);
-          window.dispatchEvent(new Event('credits-updated'));
-  } catch (err: unknown) {
-    setGenerationError(
-      err instanceof Error ? err.message : "An unexpected error occurred while compiling the report."
-    );
-  } finally {
-    setIsGenerating(false);
-  }
-};
+      const res = await generateReport(payload, screenshotFiles, referenceFile, referenceText);
+      
+      setGenerationProgress(100);
+      setGenerationPhase("Complete!");
+      setGeneratedResponse(res.document);
+      goToStep(6);
+      window.dispatchEvent(new Event('credits-updated'));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred while compiling the report.";
+      
+      // Check for insufficient tokens/credits variations
+      const isTokenError = /not enough token|insufficient token|out of credit|insufficient credit/i.test(errorMessage);
+
+      if (isTokenError) {
+        setShowTokenModal(true);
+      } else {
+        setGenerationError(errorMessage);
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleFillDemoData = () => {
-   const enabledSectionsWithScreenshot = report.sections.filter(
+    const enabledSectionsWithScreenshot = report.sections.filter(
       (s) => s.enabled && s.proof === "required"
     );
 
@@ -349,26 +358,25 @@ const handleGenerate = async () => {
         )}
 
         {/* STEP 3: CONFIGURE SECTIONS */}
-{report.currentStep === 3 && (
-  <div className="space-y-6">
-    {/* ...header stuff stays... */}
-    {report.sections.length === 0 ? (
-      <div className="apple-glass-card rounded-2xl p-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
-        <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
-        Sections are still loading for this template. Please wait a moment.
-      </div>
-    ) : (
-      <SectionList
-        sections={report.sections}
-        onToggleEnabled={toggleSection}
-        onToggleScreenshot={toggleScreenshotRequired}
-        onUpdateSection={updateSection}
-        onDeleteSection={deleteSection}
-        onMoveSection={moveSection}
-        onAddCustomSection={addCustomSection}
-        validationError={stepErrors[0]}
-      />
-    )}
+        {report.currentStep === 3 && (
+          <div className="space-y-6">
+            {report.sections.length === 0 ? (
+              <div className="apple-glass-card rounded-2xl p-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
+                Sections are still loading for this template. Please wait a moment.
+              </div>
+            ) : (
+              <SectionList
+                sections={report.sections}
+                onToggleEnabled={toggleSection}
+                onToggleScreenshot={toggleScreenshotRequired}
+                onUpdateSection={updateSection}
+                onDeleteSection={deleteSection}
+                onMoveSection={moveSection}
+                onAddCustomSection={addCustomSection}
+                validationError={stepErrors[0]}
+              />
+            )}
             <div className="pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
               <button type="button" onClick={prevStep} className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full transition-colors">
                 <ArrowLeft className="w-3.5 h-3.5" />
@@ -399,7 +407,6 @@ const handleGenerate = async () => {
               </p>
             </div>
 
-            {/* 1. Screenshot Uploader */}
             <div className="apple-glass-card rounded-2xl p-6 border border-black/5 dark:border-white/10">
               <ScreenshotUploader
                 screenshots={uploadedScreenshots}
@@ -408,7 +415,6 @@ const handleGenerate = async () => {
               />
             </div>
 
-            {/* 2. Reference Uploader */}
             <ReferenceUploader
               referenceFile={referenceFile}
               referenceText={referenceText}
@@ -429,7 +435,7 @@ const handleGenerate = async () => {
           </div>
         )}
 
-        {/* STEP 5: CONFIRM & GENERATE (Previously Step 6) */}
+        {/* STEP 5: CONFIRM & GENERATE */}
         {report.currentStep === 5 && (
           <div className="space-y-6 max-w-3xl mx-auto">
             <div>
@@ -550,7 +556,7 @@ const handleGenerate = async () => {
           </div>
         )}
 
-        {/* STEP 6: DOWNLOAD DOCX / PDF (Previously Step 7) */}
+        {/* STEP 6: DOWNLOAD DOCX / PDF */}
         {report.currentStep === 6 && (
           generatedResponse ? (
             <GeneratedReport
@@ -582,6 +588,52 @@ const handleGenerate = async () => {
           )
         )}
       </div>
+
+      {/* INSUFFICIENT TOKENS MODAL */}
+      {showTokenModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-black/10 dark:border-white/10 rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            {/* Close Button (Cross Sign) */}
+            <button
+              onClick={() => setShowTokenModal(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-neutral-500 dark:text-neutral-400 transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex flex-col items-center text-center space-y-3 pt-2">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                Insufficient Tokens
+              </h3>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                You don't have enough tokens to generate this report. Upgrade your plan or purchase more tokens to continue.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 pt-2">
+              <button
+                onClick={() => {
+                  window.location.href = "/subscribe";
+                }}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-100 text-sm font-semibold rounded-xl shadow-xs transition-all active:scale-[0.98]"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Subscribe to Get Tokens</span>
+              </button>
+              <button
+                onClick={() => setShowTokenModal(false)}
+                className="w-full px-6 py-3 bg-black/5 dark:bg-white/5 text-neutral-700 dark:text-neutral-300 hover:bg-black/10 dark:hover:bg-white/10 text-sm font-medium rounded-xl transition-colors"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 };
