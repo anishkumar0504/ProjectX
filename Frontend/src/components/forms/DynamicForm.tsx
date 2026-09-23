@@ -123,7 +123,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 type="text"
                 value={formData["facultyName"] || ""}
                 onChange={(e) => onFieldChange("facultyName", e.target.value)}
-                placeholder="e.g., Ms. Tahreem Shaikh"
+                placeholder="Name of faculty"
                 className="w-full pl-10 pr-4 py-3 text-sm rounded-xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/20 dark:focus:ring-white/20 transition-all"
               />
             </div>

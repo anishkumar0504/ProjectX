@@ -15,7 +15,7 @@ const TEMPLATES = [
     defaultMeta: JSON.stringify({
       program: "B.Tech TY (CCSA)",
       school: "School of Computer Science, Engineering and Applications(SCSEA)",
-      facultyName: "Ms. Tahreem Shaikh",
+      facultyName: "Name of your Faculty",
     }),
     // ✅ MUST BE AN ARRAY: This matches the ReportSection interface
     defaultSections: JSON.stringify([

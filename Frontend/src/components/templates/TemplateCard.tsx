@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import type { ReportTemplate } from "../../types/report";
-import { Check, X, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Check, X, ChevronLeft, ChevronRight, Eye, MoreVertical } from "lucide-react";
 
 interface TemplateCardProps {
   template: ReportTemplate;
   isSelected: boolean;
   onSelect: (templateId: string) => void;
+  onOptionsClick?: (e: React.MouseEvent, template: ReportTemplate) => void;
 }
 
 const IMG_URL = import.meta.env.VITE_IMG_URL || "http://localhost:4000";
@@ -22,6 +23,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
   template,
   isSelected,
   onSelect,
+  onOptionsClick,
 }) => {
   const parsedScreenshots = useMemo(() => {
     if (!template.screenshots) return [];
@@ -30,13 +32,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
       try {
         const parsed = JSON.parse(template.screenshots);
         return Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        console.warn(`[TemplateCard] Failed to parse screenshots for "${template.name}":`, template.screenshots, e);
+      } catch {
         return [];
       }
     }
     return [];
-  }, [template.screenshots, template.name]);
+  }, [template.screenshots]);
 
   const allImageUrls = useMemo(() => {
     const urls: string[] = [];
@@ -46,20 +47,8 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
     };
     addUrl(template.previewImageUrl);
     parsedScreenshots.forEach(addUrl);
-
-if (urls.length === 0 && import.meta.env.DEV) {
-        console.warn(`[TemplateCard] "${template.name}" resolved 0 image URLs.`, {
-        previewImageUrl: template.previewImageUrl,
-        rawScreenshots: template.screenshots,
-        parsedScreenshots,
-        IMG_URL,
-      });
-    }
     return urls;
-  }, [template.previewImageUrl, parsedScreenshots, template.name, template.screenshots]);
-
-  // const mainImageUrl = allImageUrls[0] || null;
-  // const hasImages = allImageUrls.length > 0;
+  }, [template.previewImageUrl, parsedScreenshots]);
 
   const [hoverIndex, setHoverIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
@@ -71,7 +60,6 @@ if (urls.length === 0 && import.meta.env.DEV) {
     () => allImageUrls.filter((u) => !brokenUrls.has(u)),
     [allImageUrls, brokenUrls]
   );
-  const hasWorkingImages = workingUrls.length > 0;
 
   const startHoverSlide = () => {
     if (workingUrls.length > 1) {
@@ -92,8 +80,7 @@ if (urls.length === 0 && import.meta.env.DEV) {
     };
   }, []);
 
-  const currentDisplayUrl =
-    workingUrls.length > 1 ? workingUrls[hoverIndex % workingUrls.length] : workingUrls[0] || null;
+  const currentDisplayUrl = workingUrls.length > 0 ? workingUrls[hoverIndex % workingUrls.length] : null;
 
   const markBroken = (url: string) => {
     setBrokenUrls((prev) => {
@@ -125,7 +112,6 @@ if (urls.length === 0 && import.meta.env.DEV) {
     setZoomIndex((prev) => (prev - 1 + workingUrls.length) % workingUrls.length);
   };
 
-  // Close zoom on Escape
   useEffect(() => {
     if (!isZoomed) return;
     const onKey = (e: KeyboardEvent) => {
@@ -144,101 +130,125 @@ if (urls.length === 0 && import.meta.env.DEV) {
         onClick={() => onSelect(template.id)}
         onMouseEnter={startHoverSlide}
         onMouseLeave={stopHoverSlide}
-        className={`group relative flex flex-col text-left apple-glass-card rounded-2xl p-4 transition-all hover:scale-[1.02] ${
+        className={`group relative flex flex-col text-left apple-glass-card rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all hover:scale-[1.02] ${
           isSelected ? "ring-2 ring-black dark:ring-white" : ""
         }`}
       >
-        <div className="relative aspect-[3/4] mb-4 rounded-xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-          {currentDisplayUrl && hasWorkingImages ? (
+        {/* Image Container with Responsive Aspect Ratio */}
+        <div className="relative aspect-[4/5] sm:aspect-[3/4] mb-3 sm:mb-4 rounded-lg sm:rounded-xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+          {currentDisplayUrl ? (
             <>
               <img
                 src={currentDisplayUrl}
                 alt={`${template.name} preview`}
                 className="w-full h-full object-cover transition-opacity duration-500"
                 loading="lazy"
-                onError={() => {
-                  console.error(`[TemplateCard] Image 404/failed: ${currentDisplayUrl}`);
-                  markBroken(currentDisplayUrl);
-                }}
+                onError={() => markBroken(currentDisplayUrl)}
               />
 
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
-                <button
-                  type="button"
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 sm:gap-3">
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={openZoom}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 hover:bg-white text-neutral-900 shadow-lg transition-all transform hover:scale-105"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openZoom(e as unknown as React.MouseEvent);
+                    }
+                  }}
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/90 hover:bg-white text-neutral-900 shadow-lg transition-all transform hover:scale-105 cursor-pointer"
                 >
-                  <Eye className="w-5 h-5" />
-                  <span className="text-sm font-semibold">
-                    {workingUrls.length > 1 ? `View ${workingUrls.length} Images` : "View Image"}
+                  <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-xs sm:text-sm font-semibold">
+                    {workingUrls.length > 1 ? `View ${workingUrls.length}` : "View"}
                   </span>
-                </button>
+                </div>
               </div>
 
-              {isSelected && (
-                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center z-10">
-                  <Check className="w-4 h-4" />
-                </div>
-              )}
+              {/* Top Right Controls */}
+              <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+                {isSelected && (
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shadow-sm">
+                    <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </div>
+                )}
+                {onOptionsClick && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOptionsClick(e, template);
+                    }}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm border border-black/10 dark:border-white/10 flex items-center justify-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shadow-sm"
+                    aria-label="Template options"
+                  >
+                    <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </button>
+                )}
+              </div>
             </>
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center p-4">
-                <div className="text-4xl mb-2">🖼️</div>
-                <p className="text-xs text-neutral-500">No preview available</p>
+              <div className="text-center p-2 sm:p-4">
+                <div className="text-2xl sm:text-4xl mb-1 sm:mb-2">🖼️</div>
+                <p className="text-[10px] sm:text-xs text-neutral-500">No preview</p>
               </div>
             </div>
           )}
         </div>
 
-        <div className="space-y-2">
+        {/* Card Content */}
+        <div className="space-y-1.5 sm:space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-sm font-semibold text-neutral-900 dark:text-white leading-tight">
+            <h3 className="text-xs sm:text-sm font-semibold text-neutral-900 dark:text-white leading-tight line-clamp-1">
               {template.name}
             </h3>
-            <span className="text-lg">{template.icon || "📄"}</span>
+            <span className="text-base sm:text-lg flex-shrink-0">{template.icon || "📄"}</span>
           </div>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
+          <p className="text-[11px] sm:text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">
             {template.description}
           </p>
-          <div className="pt-2 flex items-center gap-2">
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-neutral-700 dark:text-neutral-300">
-{template.category || template.name}
+          <div className="pt-1 sm:pt-2 flex items-center gap-2">
+            <span className="text-[9px] sm:text-[10px] font-medium px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-neutral-700 dark:text-neutral-300">
+              {template.category || "General"}
             </span>
           </div>
         </div>
       </button>
 
-      {isZoomed && hasWorkingImages && (
+      {/* Compact Responsive Zoom Modal */}
+      {isZoomed && workingUrls.length > 0 && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-2 sm:p-4"
           onClick={closeZoom}
         >
-          <div className="relative w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
+          <div className="relative w-full max-w-3xl sm:max-w-4xl" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-2 sm:mb-4 px-1">
               <div>
-                <h3 className="text-xl font-semibold text-white">{template.name}</h3>
-                <p className="text-sm text-neutral-400">
-                  {zoomIndex + 1} of {workingUrls.length} image{workingUrls.length > 1 ? "s" : ""}
+                <h3 className="text-sm sm:text-xl font-semibold text-white truncate pr-4">{template.name}</h3>
+                <p className="text-[10px] sm:text-sm text-neutral-400">
+                  {zoomIndex + 1} of {workingUrls.length}
                 </p>
               </div>
               <button
                 onClick={closeZoom}
-                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                className="p-1.5 sm:p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex-shrink-0"
                 aria-label="Close preview"
               >
-                <X className="w-6 h-6" />
+                <X className="w-4 h-4 sm:w-6 sm:h-6" />
               </button>
             </div>
 
-            <div className="relative bg-neutral-900 rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center p-4">
+            {/* Main Image */}
+            <div className="relative bg-neutral-900 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center p-2 sm:p-4">
               <img
                 src={workingUrls[zoomIndex]}
                 alt={`${template.name} view ${zoomIndex + 1}`}
-                className="max-w-full max-h-[75vh] object-contain rounded-lg"
+                className="max-w-full max-h-[60vh] sm:max-h-[75vh] object-contain rounded-md sm:rounded-lg"
                 onError={() => {
                   const bad = workingUrls[zoomIndex];
-                  console.error(`[TemplateCard] Zoomed image failed: ${bad}`);
                   markBroken(bad);
                   setZoomIndex((z) => Math.max(0, z - 1));
                 }}
@@ -248,24 +258,25 @@ if (urls.length === 0 && import.meta.env.DEV) {
                 <>
                   <button
                     onClick={prevZoom}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-black/70 text-white transition-all"
+                    className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 p-2 sm:p-3 rounded-full bg-black/50 hover:bg-black/70 text-white transition-all"
                     aria-label="Previous image"
                   >
-                    <ChevronLeft className="w-6 h-6" />
+                    <ChevronLeft className="w-4 h-4 sm:w-6 sm:h-6" />
                   </button>
                   <button
                     onClick={nextZoom}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-black/70 text-white transition-all"
+                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-2 sm:p-3 rounded-full bg-black/50 hover:bg-black/70 text-white transition-all"
                     aria-label="Next image"
                   >
-                    <ChevronRight className="w-6 h-6" />
+                    <ChevronRight className="w-4 h-4 sm:w-6 sm:h-6" />
                   </button>
                 </>
               )}
             </div>
 
+            {/* Thumbnails */}
             {workingUrls.length > 1 && (
-              <div className="flex gap-2 mt-4 justify-center overflow-x-auto pb-2">
+              <div className="flex gap-1.5 sm:gap-2 mt-3 sm:mt-4 justify-center overflow-x-auto pb-2 px-1">
                 {workingUrls.map((url, idx) => (
                   <button
                     key={url}
@@ -273,13 +284,13 @@ if (urls.length === 0 && import.meta.env.DEV) {
                       e.stopPropagation();
                       setZoomIndex(idx);
                     }}
-                    className={`relative rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    className={`relative rounded-md sm:rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
                       idx === zoomIndex
-                        ? "border-white scale-110"
+                        ? "border-white scale-105"
                         : "border-white/20 opacity-50 hover:opacity-100"
                     }`}
                   >
-                    <img src={url} alt={`Thumbnail ${idx + 1}`} className="w-24 h-16 object-cover" />
+                    <img src={url} alt={`Thumbnail ${idx + 1}`} className="w-16 h-12 sm:w-24 sm:h-16 object-cover" />
                   </button>
                 ))}
               </div>
