@@ -127,8 +127,8 @@ export const ReferenceUploader: React.FC<ReferenceUploaderProps> = ({
       {/* Info Box */}
       <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
         <p className="text-xs text-blue-700 dark:text-blue-300">
-          <strong>💡 Tip:</strong> If you upload a DOCX, Gemini will follow your steps exactly. 
-          The additional instructions will help Gemini enhance other sections like Aim, Objectives, 
+          <strong>💡 Tip:</strong> If you upload a DOCX, ProjectX AI will follow your steps exactly. 
+          The additional instructions will help ProjectX AI enhance other sections like Aim, Objectives, 
           and Verification. Both fields are optional - leave them empty for automatic generation.
         </p>
       </div>

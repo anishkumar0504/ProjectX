@@ -403,7 +403,7 @@ export const ReportGenerator: React.FC = () => {
                 </h2>
               </div>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-                Upload your verification screenshots and optional reference materials. Gemini will automatically organize them into the correct steps.
+                Upload your verification screenshots and optional reference materials. ProjectX AI will automatically organize them into the correct steps.
               </p>
             </div>
 
