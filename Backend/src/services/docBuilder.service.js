@@ -1,5 +1,5 @@
 const path = require("path");
-const original = require("../../Docbuilder");
+const original = require("../../DocBuilder/index");
 
 /**
  * Wraps buildPracticalDocx to add:
