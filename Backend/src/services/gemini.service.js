@@ -1,2 +1,2 @@
 // Re-exports your existing geminiService.js
-module.exports = require("../../geminiService");
+module.exports = require("../../GeminiBuilder/index");

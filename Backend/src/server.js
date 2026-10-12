@@ -29,6 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 if (config.nodeEnv !== "test") app.use(morgan("dev"));
 const cleanupRoutes = require("./routes/cleanup.routes");
 app.use("/api", cleanupRoutes);
+
 // serve generated docx files
 app.use("/files", express.static(path.join(__dirname, "..", "uploads/outputs")));
 
