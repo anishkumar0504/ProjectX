@@ -145,7 +145,22 @@ exports.generate = async ({ userId, body, files }) => {
 
     fs.writeFileSync(outputPath, buf);
     console.log(`✅ Final document saved to disk: ${outputFilename}`);
-
+ try {
+      const libre = require("libreoffice-convert");
+      const util = require("util");
+      const convertAsync = util.promisify(libre.convert);
+      
+      const pdfFilename = `${doc.id}.pdf`;
+      const pdfPath = path.join(__dirname, "../../uploads/outputs", pdfFilename);
+      
+      // Convert the DOCX buffer to PDF
+      const pdfBuf = await convertAsync(buf, ".pdf", undefined);
+      fs.writeFileSync(pdfPath, pdfBuf);
+      console.log(`✅ Final PDF saved to disk: ${pdfFilename}`);
+    } catch (pdfErr) {
+      // Non-fatal: If PDF fails, DOCX is still saved and usable
+      console.warn("⚠️ PDF generation failed, but DOCX is ready:", pdfErr.message);
+    }
     // 12. Cleanup Temp Files
     for (const f of filesArray) {
       try {
