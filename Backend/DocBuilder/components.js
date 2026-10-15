@@ -207,7 +207,8 @@ function figureSlot({ image, hint, captionText, placeholders, maxH }) {
   return [...gap, block, caption(captionText)];
 }
 
-function stepBlock(step, i, figNo, items, placeholders, maxH) {
+// ✅ Added hideEmptyPlaceholders parameter
+function stepBlock(step, i, figNo, items, placeholders, maxH, hideEmptyPlaceholders = false) {
   const n = step.instructions.length;
   const out = [
     new Paragraph({
@@ -234,7 +235,11 @@ function stepBlock(step, i, figNo, items, placeholders, maxH) {
       })
     ),
   ];
-  const slots = items.length ? items : [{ image: null, caption: step.screenshotCaption }];
+
+  // ✅ CRITICAL FIX: If hideEmptyPlaceholders is true and no items, return empty array. 
+  // This prevents the "Paste screenshot here" box from being generated.
+  const slots = items.length ? items : (hideEmptyPlaceholders ? [] : [{ image: null, caption: step.screenshotCaption }]);
+  
   slots.forEach((it, k) =>
     out.push(...figureSlot({
       image: it.image, hint: k === 0 ? step.screenshotHint : "", placeholders, maxH,

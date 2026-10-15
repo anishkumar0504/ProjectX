@@ -61,24 +61,26 @@ async function generatePracticalContent(o) {
   const ordered = o.ordered !== false;
   const models = o.models?.length ? o.models : DEFAULT_MODELS;
   const enabledSections = o.enabledSections || null;
+  const powerMode = !!o.powerMode;
 
   const referenceText = await readReference(o);
   const images = o.sendImages === false || !o.images?.length ? [] : await prepareImages(o.images);
 
-  const systemInstruction = buildSystemInstruction(cloud);
-  const basePrompt = buildUserPrompt({ 
-    title, 
-    subject, 
-    cloud, 
-    namePrefix, 
-    stepCount, 
-    referenceText, 
-    imageCount: images.length, 
+  const systemInstruction = buildSystemInstruction(cloud, powerMode);
+  const basePrompt = buildUserPrompt({
+    title,
+    subject,
+    cloud,
+    namePrefix,
+    stepCount,
+    referenceText,
+    imageCount: images.length,
     ordered,
     enabledSections,
-    customSections: o.customSections
+    customSections: o.customSections,
+    powerMode,
   });
-  
+
   const buildParts = (hint) => {
     const parts = [{ text: basePrompt + hint }];
     images.forEach((im, i) => {
@@ -99,7 +101,7 @@ async function generatePracticalContent(o) {
           temperature: attempt === 0 ? 0.4 : 0.2,
           timeoutMs: 120_000,
         });
-        return normalizeContent(parseJson(text), { imageCount: images.length, ordered, enabledSections });
+        return normalizeContent(parseJson(text), { imageCount: images.length, ordered, enabledSections, powerMode });
       } catch (e) {
         lastErr = e;
         const s = e.status;

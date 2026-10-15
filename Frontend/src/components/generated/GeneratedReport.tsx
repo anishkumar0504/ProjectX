@@ -1,6 +1,7 @@
 import React from "react";
 import type { GeneratedReportResponse, ReportState, ReportTemplate } from "../../types/report";
-import { Check, RotateCcw, Edit, FileText, Calendar, FileDown } from "lucide-react"; // ✅ Removed HardDrive
+import { Check, RotateCcw, Edit, FileText, Calendar, FileDown } from "lucide-react";
+
 interface GeneratedReportProps {
   response: GeneratedReportResponse;
   template: ReportTemplate;
@@ -22,26 +23,24 @@ export const GeneratedReport: React.FC<GeneratedReportProps> = ({
     0
   );
 
-  // ✅ 1. FIXED: Changed 'generatedResponse' to 'response' to match the prop name
-  const handleDownload = async () => {
+  // ✅ UPDATED: Now accepts 'docx' or 'pdf' format parameter
+  const handleDownload = async (format: 'docx' | 'pdf') => {
     if (!response?.id) return;
 
     try {
-      // ✅ FIX: Use "authToken" (no underscore) to match the rest of your app
       const token = localStorage.getItem("auth_token");
 
-      // 1. Fetch the file as a Blob
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/documents/${response.id}/download`, {
+      // 1. Fetch the file as a Blob with the requested format
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/documents/${response.id}/download?format=${format}`, {
         method: "GET",
         headers: {
-          // ✅ Pass the auth token so the backend verifies ownership
           ...(token && { "Authorization": `Bearer ${token}` })
         },
       });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || errData.error || "Failed to download file");
+        throw new Error(errData.message || errData.error || `Failed to download ${format.toUpperCase()} file`);
       }
 
       // 2. Convert response to a Blob
@@ -53,8 +52,12 @@ export const GeneratedReport: React.FC<GeneratedReportProps> = ({
       // 4. Create a hidden anchor element to trigger the browser download
       const a = document.createElement("a");
       a.href = url;
-      // ✅ Use the filename provided by the backend, or fallback to a safe default
-      a.download = response.filename || `Report_${response.id}.docx`; 
+      
+      // ✅ Safely derive the filename with the correct extension
+      const originalFilename = (response as any).filename || `Report_${response.id}`;
+      const cleanName = originalFilename.replace(/\.(docx|pdf)$/i, "");
+      a.download = `${cleanName}.${format}`; 
+      
       document.body.appendChild(a);
       a.click();
       
@@ -64,7 +67,7 @@ export const GeneratedReport: React.FC<GeneratedReportProps> = ({
       
     } catch (error) {
       console.error("Download failed:", error);
-      alert("Failed to download the document. Please try again.");
+      alert(`Failed to download the ${format.toUpperCase()} document. It may not have been generated yet.`);
     }
   };
 
@@ -79,14 +82,13 @@ export const GeneratedReport: React.FC<GeneratedReportProps> = ({
           Report Generated Successfully
         </h2>
         <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1 max-w-lg mx-auto">
-          Your document has been rendered to institutional standards and compiled into a distribution-ready DOCX file.
+          Your document has been rendered to institutional standards and compiled into distribution-ready formats.
         </p>
 
         {/* Metadata pills */}
         <div className="mt-5 pt-5 border-t border-black/5 dark:border-white/10 flex flex-wrap items-center justify-center gap-4 text-xs text-neutral-600 dark:text-neutral-400">
           <span className="flex items-center gap-1.5 font-mono">
             <span className="text-neutral-400">ID:</span>
-            {/* ✅ 2. FIXED: Changed 'reportId' to 'id' to match backend serialization */}
             <span className="font-semibold text-neutral-800 dark:text-neutral-200">
               {response.id}
             </span>
@@ -146,15 +148,31 @@ export const GeneratedReport: React.FC<GeneratedReportProps> = ({
               </p>
             </div>
 
-            {/* ✅ 3. FIXED: Replaced the placeholder <DownloadButtons /> with the actual working button */}
-            <div className="pt-2 flex flex-wrap gap-3 justify-center sm:justify-start">
+            {/* ✅ UPDATED: Dual Download Buttons (DOCX & PDF) */}
+                        <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
+              {/* Primary Action: DOCX */}
               <button
                 type="button"
-                onClick={handleDownload}
-                className="flex items-center gap-2 px-6 py-3 bg-black text-white dark:bg-white dark:text-black rounded-full font-semibold hover:opacity-90 transition-all shadow-sm active:scale-[0.98]"
+                onClick={() => handleDownload('docx')}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 active:scale-[0.98]"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Download Editable .docx</span>
+              </button>
+              
+              {/* Secondary Action: Helpful PDF Guidance */}
+              <button
+                type="button"
+                onClick={() => {
+                  // 1. Download the DOCX for them automatically
+                  handleDownload('docx');
+                  // 2. Show a helpful, premium-looking toast/alert
+                  alert("💡 Pro Tip for Students:\n\n1. Open the downloaded .docx file in Word or Google Docs.\n2. Review and tweak any details.\n3. Go to File > Download > PDF Document (.pdf).\n\nThis guarantees your professor sees perfect formatting!");
+                }}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-all active:scale-[0.98]"
               >
                 <FileDown className="w-4 h-4" />
-                <span>Download .docx</span>
+                <span>How to get PDF</span>
               </button>
             </div>
           </div>

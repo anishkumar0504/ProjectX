@@ -18,6 +18,8 @@ export interface GenerateReportPayload {
   imageLayout: "perStep" | "architectureOnly" | "combineAll" | "none";
   useGemini: boolean;
     allowMissingProof?: boolean; // ✅ Added to fix TS2339
+      powerMode?: boolean; // add this
+
 
 }
 
@@ -34,7 +36,7 @@ export async function generateReport(
   formData.append("sections", payload.sections); // ✅ Already stringified in component
   formData.append("imageLayout", payload.imageLayout);
   formData.append("useGemini", String(payload.useGemini));
-  
+  formData.append("powerMode", String(!!payload.powerMode)); // add this line
   if (payload.allowMissingProof) {
     formData.append("allowMissingProof", "true");
   }

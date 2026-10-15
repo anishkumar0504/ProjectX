@@ -60,7 +60,8 @@ function normalizeContent(raw, ctx = {}) {
   const imageCount = ctx.imageCount || 0;
   const ordered = ctx.ordered !== false;
   const enabledSections = ctx.enabledSections || null;
-  
+  const powerMode = !!ctx.powerMode;
+
   if (!raw || typeof raw !== "object") throw new ContentError("Response is not a JSON object");
 
   const used = new Set();
@@ -86,13 +87,24 @@ function normalizeContent(raw, ctx = {}) {
 
   const isStepsEnabled = enabledSections === null || enabledSections.includes("steps");
   if (isStepsEnabled && steps.length < 3) throw new ContentError(`Only ${steps.length} usable steps returned (need at least 3)`);
-  for (const s of steps) if (!s.screenshotCaption) s.screenshotCaption = s.title;
+
+  for (const s of steps) {
+    if (powerMode) {
+      // Power mode: no placeholder text, ever. Only real screenshots carry captions.
+      s.screenshotCaption = "";
+      s.screenshotHint = "";
+      for (const sh of s.shots) if (!sh.caption) sh.caption = s.title;
+    } else if (!s.screenshotCaption) {
+      s.screenshotCaption = s.title;
+    }
+  }
 
   let architectureScreenshot = toIndex(raw.architectureScreenshot);
   if (architectureScreenshot < 0 || architectureScreenshot >= imageCount || used.has(architectureScreenshot)) architectureScreenshot = null;
   else used.add(architectureScreenshot);
 
-  const reassigned = ordered ? enforceOrder(steps) : [];
+  // Power mode maps screenshots by content, so upload order must not reshuffle them.
+  const reassigned = ordered && !powerMode ? enforceOrder(steps) : [];
   for (const s of steps) s.shots.sort((a, b) => a.image - b.image);
 
   const services = (Array.isArray(raw.services) ? raw.services : [])
@@ -118,15 +130,18 @@ function normalizeContent(raw, ctx = {}) {
     expectedOutput: clean(raw.expectedOutput),
     conclusion: clean(raw.conclusion),
     customSections: Array.isArray(raw.customSections)
-      ? raw.customSections.map(cs => ({ 
-          id: cs.id,
-          title: clean(cs?.title), 
-          content: clean(cs?.content) 
-        })).filter(cs => cs.title && cs.content)
+      ? raw.customSections
+          .map((cs) => ({
+            id: cs?.id,
+            title: clean(cs?.title),
+            content: clean(cs?.content),
+          }))
+          .filter((cs) => cs.title && cs.content)
       : [],
     unassigned: Array.from({ length: imageCount }, (_, i) => i).filter((i) => !used.has(i)),
     reassigned,
-  };  
+    powerMode,
+  };
 
   const isEnabled = (key) => enabledSections === null || enabledSections.includes(key);
 
@@ -134,7 +149,7 @@ function normalizeContent(raw, ctx = {}) {
   if (isEnabled("objectives") && !out.objectives.length) throw new ContentError("Missing objectives");
   if (isEnabled("verification") && !out.verification.length) throw new ContentError("Missing verification");
   if (isEnabled("conclusion") && !out.conclusion) throw new ContentError("Missing conclusion");
-  
+
   return out;
 }
 
