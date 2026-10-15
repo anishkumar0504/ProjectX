@@ -44,7 +44,9 @@ async function buildPracticalDocx({ meta, content, screenshots = {}, options = {
   const servicesHeading = options.servicesHeading || "AWS Services Used";
   const maxH = Number(options.maxImageHeight) > 0 ? Number(options.maxImageHeight) : MAX_IMG_H;
   const c = content;
-  
+  // Power mode: no empty "Paste screenshot here" boxes anywhere in the document.
+  const hidePlaceholders = options.hideEmptyPlaceholders === true;
+console.log("hidePlaceholders:", hidePlaceholders);
   const userSections = options.sections || [];
   const allScreenshots = screenshots.all || [];
   const body = [];
@@ -89,10 +91,10 @@ async function buildPracticalDocx({ meta, content, screenshots = {}, options = {
                   }).filter(Boolean)
                 : [];
               
-              const showPlaceholder = section.proof === 'required' && shots.length === 0;
+              const showPlaceholder = !hidePlaceholders && section.proof === 'required' && shots.length === 0;
               const items = shots.length ? shots : (showPlaceholder ? [{ image: null, caption: s.screenshotCaption }] : []);
-              
-              const { blocks, used } = stepBlock(s, i, fig, items, placeholders, maxH);
+
+              const { blocks, used } = stepBlock(s, i, fig, items, placeholders, maxH, hidePlaceholders);
               body.push(...blocks);
               fig += used;
             });
@@ -101,17 +103,17 @@ async function buildPracticalDocx({ meta, content, screenshots = {}, options = {
         case 'verification':
           body.push(sectionHeading("Verification / Testing"));
           if (c.verification?.length) body.push(...c.verification.map(bullet));
-          if (section.proof === 'required') body.push(...figureSlot({ image: null, hint: "verification proof", placeholders, maxH, captionText: "Verification screenshot placeholder" }));
+          if (section.proof === 'required' && !hidePlaceholders) body.push(...figureSlot({ image: null, hint: "verification proof", placeholders, maxH, captionText: "Verification screenshot placeholder" }));
           break;
         case 'expectedOutput':
           body.push(sectionHeading("Expected Output"));
           if (c.expectedOutput) body.push(bodyText(c.expectedOutput));
-          if (section.proof === 'required') body.push(...figureSlot({ image: null, hint: "expected output proof", placeholders, maxH, captionText: "Expected output screenshot placeholder" }));
+          if (section.proof === 'required' && !hidePlaceholders) body.push(...figureSlot({ image: null, hint: "expected output proof", placeholders, maxH, captionText: "Expected output screenshot placeholder" }));
           break;
         case 'conclusion':
           body.push(sectionHeading("Result / Conclusion"));
           if (c.conclusion) body.push(bodyText(c.conclusion));
-          if (section.proof === 'required') body.push(...figureSlot({ image: null, hint: "result proof", placeholders, maxH, captionText: "Result screenshot placeholder" }));
+          if (section.proof === 'required' && !hidePlaceholders) body.push(...figureSlot({ image: null, hint: "result proof", placeholders, maxH, captionText: "Result screenshot placeholder" }));
           break;
         case 'custom':
           // ✅ FIX: Match by ID, fallback to title. ALWAYS add placeholder if proof is required.
@@ -120,7 +122,7 @@ async function buildPracticalDocx({ meta, content, screenshots = {}, options = {
           if (csData?.content) {
             body.push(bodyText(csData.content));
           }
-          if (section.proof === 'required') {
+          if (section.proof === 'required' && !hidePlaceholders) {
             body.push(...figureSlot({ image: null, hint: section.title, placeholders, maxH, captionText: `${section.title} screenshot placeholder` }));
           }
           break;
@@ -150,9 +152,9 @@ async function buildPracticalDocx({ meta, content, screenshots = {}, options = {
               return img ? { image: toBuffer(img), caption: x.caption } : null;
             }).filter(Boolean)
           : [];
-        const showPlaceholder = getSectionProof(userSections, 'steps') === 'required' && shots.length === 0;
+        const showPlaceholder = !hidePlaceholders && getSectionProof(userSections, 'steps') === 'required' && shots.length === 0;
         const items = shots.length ? shots : (showPlaceholder ? [{ image: null, caption: s.screenshotCaption }] : []);
-        const { blocks, used } = stepBlock(s, i, fig, items, placeholders, maxH);
+        const { blocks, used } = stepBlock(s, i, fig, items, placeholders, maxH, hidePlaceholders);
         body.push(...blocks);
         fig += used;
       });
@@ -171,29 +173,32 @@ async function buildPracticalDocx({ meta, content, screenshots = {}, options = {
         if (isSectionEnabled(userSections, cs.id) && cs.title && cs.content) {
           body.push(sectionHeading(cs.title));
           body.push(bodyText(cs.content));
-          if (getSectionProof(userSections, cs.id) === 'required') {
+          if (getSectionProof(userSections, cs.id) === 'required' && !hidePlaceholders) {
             body.push(...figureSlot({ image: null, hint: cs.title, placeholders, maxH, captionText: `${cs.title} screenshot placeholder` }));
           }
         }
       });
     }
 
-    if (isSectionEnabled(userSections, 'verification')) {
-      body.push(sectionHeading("Verification / Testing"));
-      if (c.verification?.length) body.push(...c.verification.map(bullet));
-      if (getSectionProof(userSections, 'verification') === 'required') body.push(...figureSlot({ image: null, hint: "verification proof", placeholders, maxH, captionText: "Verification screenshot placeholder" }));
-    }
+  if (isSectionEnabled(userSections, 'verification')) {
+  body.push(sectionHeading("Verification / Testing"));
+  if (c.verification?.length) body.push(...c.verification.map(bullet));
+  // ✅ ONLY add placeholder if Power Mode is OFF
+  if (getSectionProof(userSections, 'verification') === 'required' && !hidePlaceholders) {
+    body.push(...figureSlot({ image: null, hint: "verification proof", placeholders, maxH, captionText: "Verification screenshot placeholder" }));
+  }
+}
 
     if (isSectionEnabled(userSections, 'expectedOutput')) {
       body.push(sectionHeading("Expected Output"));
       if (c.expectedOutput) body.push(bodyText(c.expectedOutput));
-      if (getSectionProof(userSections, 'expectedOutput') === 'required') body.push(...figureSlot({ image: null, hint: "expected output proof", placeholders, maxH, captionText: "Expected output screenshot placeholder" }));
+      if (getSectionProof(userSections, 'expectedOutput') === 'required' && !hidePlaceholders) body.push(...figureSlot({ image: null, hint: "expected output proof", placeholders, maxH, captionText: "Expected output screenshot placeholder" }));
     }
 
     if (isSectionEnabled(userSections, 'conclusion')) {
       body.push(sectionHeading("Result / Conclusion"));
       if (c.conclusion) body.push(bodyText(c.conclusion));
-      if (getSectionProof(userSections, 'conclusion') === 'required') body.push(...figureSlot({ image: null, hint: "result proof", placeholders, maxH, captionText: "Result screenshot placeholder" }));
+      if (getSectionProof(userSections, 'conclusion') === 'required' && !hidePlaceholders) body.push(...figureSlot({ image: null, hint: "result proof", placeholders, maxH, captionText: "Result screenshot placeholder" }));
     }
   }
 

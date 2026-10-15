@@ -48,4 +48,9 @@ exports.generateDocSchema = z.object({
   
   // ✅ ADDED: Allow frontend to bypass proof validation if needed
   allowMissingProof: z.union([z.boolean(), z.string()]).optional(),
+
+   powerMode: z.union([z.boolean(), z.string()]).optional(),
+
+  // Student's pasted reference notes
+  referenceText: z.string().optional(),
 });

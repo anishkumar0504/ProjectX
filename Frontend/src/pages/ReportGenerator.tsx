@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Send,
+  Check ,
   Loader2,
   AlertCircle,
   FileCheck2,
@@ -50,6 +51,7 @@ export const ReportGenerator: React.FC = () => {
   } = useReport();
 
   // Generation & API state
+  const [powerMode, setPowerMode] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPhase, setGenerationPhase] = useState<string>("");
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -160,6 +162,8 @@ export const ReportGenerator: React.FC = () => {
         },
         sections: JSON.stringify(sectionsPayload),
         imageLayout: "perStep" as const,
+          powerMode: powerMode, // ✅ ADD THIS LINE
+
         useGemini: uploadedScreenshots.length > 0 || 
                    !!referenceFile || 
                    !!referenceText || 
@@ -406,7 +410,32 @@ export const ReportGenerator: React.FC = () => {
                 Upload your verification screenshots and optional reference materials. ProjectX AI will automatically organize them into the correct steps.
               </p>
             </div>
-
+{/* ✅ POWER MODE TOGGLE */}
+{uploadedScreenshots.length > 0 && (
+  <div className="apple-glass-card rounded-2xl p-5 border border-blue-500/20 bg-blue-500/5 dark:bg-blue-500/10">
+    <label className="flex items-start gap-3 cursor-pointer group">
+      <div className="relative flex items-center pt-0.5">
+        <input
+          type="checkbox"
+          checked={powerMode}
+          onChange={(e) => setPowerMode(e.target.checked)}
+          className="peer sr-only"
+        />
+      <div className="w-5 h-5 rounded-md border border-blue-500/50 bg-white dark:bg-neutral-900 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all flex items-center justify-center shadow-sm">
+  {powerMode && <Check className="w-3.5 h-3.5 text-white" />}
+</div>
+      </div>
+      <div className="flex-1">
+        <span className="text-sm font-semibold text-neutral-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+          Power Mode (Smart Image Mapping)
+        </span>
+        <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
+          Generate all required text steps, but <strong>only create image slots</strong> for the screenshots actually uploaded. No empty placeholder boxes.
+        </p>
+      </div>
+    </label>
+  </div>
+)}
             <div className="apple-glass-card rounded-2xl p-6 border border-black/5 dark:border-white/10">
               <ScreenshotUploader
                 screenshots={uploadedScreenshots}
@@ -421,6 +450,7 @@ export const ReportGenerator: React.FC = () => {
               onFileChange={setReferenceFile}
               onTextChange={setReferenceText}
             />
+
 
             <div className="pt-4 border-t border-black/5 dark:border-white/10 flex items-center justify-between">
               <button type="button" onClick={prevStep} className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-full transition-colors">

@@ -149,23 +149,30 @@ export const GeneratedReport: React.FC<GeneratedReportProps> = ({
             </div>
 
             {/* ✅ UPDATED: Dual Download Buttons (DOCX & PDF) */}
-            <div className="pt-2 flex flex-wrap gap-3 justify-center sm:justify-start">
+                        <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
+              {/* Primary Action: DOCX */}
               <button
                 type="button"
                 onClick={() => handleDownload('docx')}
-                className="flex items-center gap-2 px-6 py-3 bg-black text-white dark:bg-white dark:text-black rounded-full font-semibold hover:opacity-90 transition-all shadow-sm active:scale-[0.98]"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20 active:scale-[0.98]"
               >
                 <FileText className="w-4 h-4" />
-                <span>Download .docx</span>
+                <span>Download Editable .docx</span>
               </button>
               
+              {/* Secondary Action: Helpful PDF Guidance */}
               <button
                 type="button"
-                onClick={() => handleDownload('pdf')}
-                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 transition-all shadow-sm active:scale-[0.98]"
+                onClick={() => {
+                  // 1. Download the DOCX for them automatically
+                  handleDownload('docx');
+                  // 2. Show a helpful, premium-looking toast/alert
+                  alert("💡 Pro Tip for Students:\n\n1. Open the downloaded .docx file in Word or Google Docs.\n2. Review and tweak any details.\n3. Go to File > Download > PDF Document (.pdf).\n\nThis guarantees your professor sees perfect formatting!");
+                }}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 rounded-full font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-all active:scale-[0.98]"
               >
                 <FileDown className="w-4 h-4" />
-                <span>Download .pdf</span>
+                <span>How to get PDF</span>
               </button>
             </div>
           </div>

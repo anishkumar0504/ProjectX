@@ -33,8 +33,8 @@ exports.generate = async ({ userId, body, files }) => {
   }
 
   // 1. Destructure body (useGemini removed as it's no longer needed/used)
-  const { templateSlug, meta, sections, imageLayout, referenceText } = body;
-
+  const { templateSlug, meta, sections, imageLayout, referenceText,powerMode } = body;
+  console.log("powerMode received:", JSON.stringify(powerMode)); // <-- here, inside the function
   // 2. Parse meta (Declared ONLY ONCE to prevent SyntaxError)
   let parsedMeta = meta;
   if (typeof meta === "string") { 
@@ -124,6 +124,8 @@ exports.generate = async ({ userId, body, files }) => {
       images: shotFiles.map((f) => ({ path: f.path, name: f.originalname })),
       enabledSections: enabledKeys,
       customSections: customSectionsForGemini,
+        powerMode: powerMode === 'true' || powerMode === true, // ✅ ADD THIS
+
     });
 
     // 11. Build and Save DOCX
@@ -138,6 +140,8 @@ exports.generate = async ({ userId, body, files }) => {
         sections: parsedSections,
         imageLayout: imageLayout || "perStep",
         placeholders: "box",
+            hideEmptyPlaceholders: powerMode === 'true' || powerMode === true, // ✅ ADD THIS
+
         appendUnassigned: true,
         screenshotNote: false,
       },
