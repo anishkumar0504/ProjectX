@@ -1,21 +1,17 @@
 import React, { useState, FormEvent, useEffect } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
-import { Mail, Lock, User, Eye, EyeOff, Sun, Moon, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sun, Moon, Loader2 } from "lucide-react";
 
 // Base URL from environment variable
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
-type AuthMode = "signin" | "signup";
-
 export default function Auth() {
-  const [mode, setMode] = useState<AuthMode>("signin");
   const [isDark, setIsDark] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
   });
@@ -48,16 +44,13 @@ export default function Auth() {
     setError(null);
 
     try {
-      const endpoint = mode === "signin" ? "/auth/login" : "/auth/register";
-      const payload =
-        mode === "signin"
-          ? { email: formData.email, password: formData.password }
-          : { name: formData.name, email: formData.email, password: formData.password };
-
-      const res = await fetch(`${API_URL}${endpoint}`, {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
       const data = await res.json();
@@ -84,13 +77,11 @@ export default function Auth() {
   };
 
   // --- Google OAuth Auth ---
-  // --- Google OAuth Auth ---
   const handleGoogleSuccess = async (tokenResponse: any) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // useGoogleLogin with flow: "implicit" returns { access_token, ... }
       const res = await fetch(`${API_URL}/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,12 +111,10 @@ export default function Auth() {
     }
   };
 
-
-
   const googleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
     onError: () => setError("Google login failed. Please try again."),
-    flow: "implicit", // Returns credential (ID token) directly
+    flow: "implicit",
   });
 
   return (
@@ -152,14 +141,11 @@ export default function Auth() {
       <div className="relative z-10 w-full max-w-md">
         {/* Brand Header */}
         <div className="text-center mb-8">
-
           <h1 className="text-[28px] font-semibold tracking-tight text-[var(--text-primary)]">
-            {mode === "signin" ? "Welcome back" : "Create your account"}
+            Welcome back
           </h1>
           <p className="text-[15px] text-[var(--text-secondary)] mt-1.5">
-            {mode === "signin"
-              ? "Sign in to continue to your dashboard"
-              : "Join us and start your journey today"}
+            Sign in to continue to your dashboard
           </p>
         </div>
 
@@ -198,27 +184,6 @@ export default function Auth() {
               </div>
             )}
 
-            {/* Name Field (Sign Up Only) */}
-            {mode === "signup" && (
-              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <label className="block text-[13px] font-medium text-[var(--text-secondary)]">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
-                  <input
-                    type="text"
-                    name="name"
-                    required={mode === "signup"}
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="apple-input w-full rounded-xl pl-11 pr-4 py-3 text-[15px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-secondary)]/60"
-                    placeholder="John Doe"
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Email Field */}
             <div className="space-y-1.5">
               <label className="block text-[13px] font-medium text-[var(--text-secondary)]">
@@ -244,14 +209,12 @@ export default function Auth() {
                 <label className="block text-[13px] font-medium text-[var(--text-secondary)]">
                   Password
                 </label>
-                {mode === "signin" && (
-                  <a
-                    href="/forgot-password"
-                    className="text-[13px] text-[#0071e3] hover:text-[#0077ed] font-medium transition-colors"
-                  >
-                    Forgot?
-                  </a>
-                )}
+                <a
+                  href="/forgot-password"
+                  className="text-[13px] text-[#0071e3] hover:text-[#0077ed] font-medium transition-colors"
+                >
+                  Forgot?
+                </a>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
@@ -283,44 +246,25 @@ export default function Auth() {
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
-              ) : mode === "signin" ? (
-                "Sign In"
               ) : (
-                "Create Account"
+                "Sign In"
               )}
             </button>
           </form>
 
-          {/* Toggle Mode */}
-          <div className="mt-6 text-center">
-            <p className="text-[14px] text-[var(--text-secondary)]">
-              {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
-              <button
-                onClick={() => {
-                  setMode(mode === "signin" ? "signup" : "signin");
-                  setError(null);
-                  setFormData({ name: "", email: "", password: "" });
-                }}
-                className="text-[#0071e3] hover:text-[#0077ed] font-semibold transition-colors"
-              >
-                {mode === "signin" ? "Sign up" : "Sign in"}
-              </button>
-            </p>
-          </div>
+          {/* Footer */}
+          <p className="text-center text-[12px] text-[var(--text-secondary)] mt-8">
+            By continuing, you agree to our{" "}
+            <a href="/terms" className="underline hover:text-[var(--text-primary)] transition-colors">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="underline hover:text-[var(--text-primary)] transition-colors">
+              Privacy Policy
+            </a>
+            .
+          </p>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-[12px] text-[var(--text-secondary)] mt-8">
-          By continuing, you agree to our{" "}
-          <a href="/terms" className="underline hover:text-[var(--text-primary)] transition-colors">
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a href="/privacy" className="underline hover:text-[var(--text-primary)] transition-colors">
-            Privacy Policy
-          </a>
-          .
-        </p>
       </div>
     </div>
   );

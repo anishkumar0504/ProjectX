@@ -11,7 +11,7 @@ interface TopbarProps {
   onFillSampleData?: () => void;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://4000/api";
 
 export const Topbar: React.FC<TopbarProps> = () => {
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -26,7 +26,7 @@ export const Topbar: React.FC<TopbarProps> = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showUpdatesModal, setShowUpdatesModal] = useState(false); // New state
+  const [showUpdatesModal, setShowUpdatesModal] = useState(false);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -122,6 +122,9 @@ export const Topbar: React.FC<TopbarProps> = () => {
     return <div className="h-14" />;
   }
 
+  // Helper to check if user is out of credits
+  const hasZeroCredits = user && (user.credits === 0 || user.credits === undefined);
+
   return (
     <>
       <header className="sticky top-0 z-40 px-3 sm:px-6 pt-3 pb-2 transition-all">
@@ -141,19 +144,33 @@ export const Topbar: React.FC<TopbarProps> = () => {
           <div className="flex items-center gap-2">
             
             {/* Dynamic Credits Button (Desktop only) */}
-            {user && user.credits > 0 && (
+            {user && (
               <a
                 href="/subscribe"
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-black/5 dark:border-white/10 transition-all group"
+                className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 group ${
+                  hasZeroCredits
+                    ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:scale-105 hover:shadow-md hover:shadow-amber-500/10"
+                    : "bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 border-black/5 dark:border-white/10 hover:scale-105"
+                }`}
               >
                 <div className="flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />
-                  <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-200">
-                    {user.credits}
+                  <CreditCard className={`w-3.5 h-3.5 transition-colors ${
+                    hasZeroCredits ? "text-amber-600 dark:text-amber-400 animate-pulse" : "text-neutral-600 dark:text-neutral-400"
+                  }`} />
+                  <span className={`text-xs font-semibold transition-colors ${
+                    hasZeroCredits ? "text-amber-700 dark:text-amber-300" : "text-neutral-700 dark:text-neutral-200"
+                  }`}>
+                    {user.credits ?? 0}
                   </span>
                 </div>
-                <div className="w-px h-3 bg-neutral-300 dark:bg-neutral-600 mx-1" />
-                <Plus className="w-3.5 h-3.5 text-neutral-500 group-hover:text-blue-500 transition-colors" />
+                <div className={`w-px h-3 mx-1 transition-colors ${
+                  hasZeroCredits ? "bg-amber-300 dark:bg-amber-700" : "bg-neutral-300 dark:bg-neutral-600"
+                }`} />
+                <Plus className={`w-3.5 h-3.5 transition-all duration-300 ${
+                  hasZeroCredits 
+                    ? "text-amber-600 dark:text-amber-400 group-hover:rotate-90" 
+                    : "text-neutral-500 group-hover:text-blue-500 group-hover:rotate-90"
+                }`} />
               </a>
             )}
 
@@ -198,12 +215,16 @@ export const Topbar: React.FC<TopbarProps> = () => {
               <div className="relative ml-1" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 border border-black/5 dark:border-white/10 transition-all"
+                  className={`flex items-center gap-2 pl-1 pr-2 py-1 rounded-full border transition-all ${
+                    hasZeroCredits 
+                      ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                      : "bg-black/5 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/15 border-black/5 dark:border-white/10"
+                  }`}
                 >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-600 dark:from-white dark:to-neutral-300 flex items-center justify-center text-white dark:text-black text-[10px] font-bold uppercase">
                     {user.name?.[0] || "U"}
                   </div>
-                  <ChevronDown className={`w-3 h-3 text-neutral-500 transition-transform ${showDropdown ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-3 h-3 transition-transform ${showDropdown ? "rotate-180" : ""} ${hasZeroCredits ? "text-amber-600 dark:text-amber-400" : "text-neutral-500"}`} />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -214,9 +235,13 @@ export const Topbar: React.FC<TopbarProps> = () => {
                       <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate">{user.email}</p>
                       
                       {/* Mobile-only credits display */}
-                      <div className="sm:hidden mt-3 flex items-center justify-between p-2 rounded-lg bg-neutral-100 dark:bg-neutral-800">
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                          <CreditCard className="w-3.5 h-3.5" />
+                      <div className={`sm:hidden mt-3 flex items-center justify-between p-2 rounded-lg transition-colors ${
+                        hasZeroCredits ? "bg-amber-50 dark:bg-amber-900/20" : "bg-neutral-100 dark:bg-neutral-800"
+                      }`}>
+                        <div className={`flex items-center gap-1.5 text-xs font-medium ${
+                          hasZeroCredits ? "text-amber-700 dark:text-amber-300" : "text-neutral-700 dark:text-neutral-300"
+                        }`}>
+                          <CreditCard className={`w-3.5 h-3.5 ${hasZeroCredits ? "animate-pulse" : ""}`} />
                           {user.credits ?? 0} Credits
                         </div>
                         <a href="/subscribe" className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline">
