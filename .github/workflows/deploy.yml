@@ -3,6 +3,9 @@ name: Deploy
 on:
   push:
     branches: [main]
+    paths:
+      - "Backend/**"
+      - ".github/workflows/deploy.yml"
 
 permissions:
   id-token: write
@@ -10,7 +13,7 @@ permissions:
 
 env:
   AWS_REGION: ap-south-1
-  INSTANCE_ID: i-REPLACE_ME
+  INSTANCE_ID: i-053a543b684aba340
   ECR_REPO: projectx
 
 jobs:
@@ -28,7 +31,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push
-        working-directory: backend   # remove this line if the Dockerfile is at the repo root
+        working-directory: Backend
         run: |
           IMAGE=${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO }}
           docker build -t $IMAGE:${{ github.sha }} -t $IMAGE:latest .
