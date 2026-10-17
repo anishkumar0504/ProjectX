@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 type AuthMode = "signin" | "signup";
 
 export default function Auth() {
-  const [mode, setMode] = useState<AuthMode>("signin");
+const [mode] = useState<AuthMode>("signin");
   const [isDark, setIsDark] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
