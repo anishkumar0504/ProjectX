@@ -84,13 +84,11 @@ export default function Auth() {
   };
 
   // --- Google OAuth Auth ---
-  // --- Google OAuth Auth ---
   const handleGoogleSuccess = async (tokenResponse: any) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // useGoogleLogin with flow: "implicit" returns { access_token, ... }
       const res = await fetch(`${API_URL}/auth/google`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -119,8 +117,6 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
-
-
 
   const googleLogin = useGoogleLogin({
     onSuccess: handleGoogleSuccess,
@@ -152,7 +148,6 @@ export default function Auth() {
       <div className="relative z-10 w-full max-w-md">
         {/* Brand Header */}
         <div className="text-center mb-8">
-
           <h1 className="text-[28px] font-semibold tracking-tight text-[var(--text-primary)]">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>
@@ -291,36 +286,19 @@ export default function Auth() {
             </button>
           </form>
 
-          {/* Toggle Mode */}
-          <div className="mt-6 text-center">
-            <p className="text-[14px] text-[var(--text-secondary)]">
-              {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
-              <button
-                onClick={() => {
-                  setMode(mode === "signin" ? "signup" : "signin");
-                  setError(null);
-                  setFormData({ name: "", email: "", password: "" });
-                }}
-                className="text-[#0071e3] hover:text-[#0077ed] font-semibold transition-colors"
-              >
-                {mode === "signin" ? "Sign up" : "Sign in"}
-              </button>
-            </p>
-          </div>
+          {/* Footer */}
+          <p className="text-center text-[12px] text-[var(--text-secondary)] mt-8">
+            By continuing, you agree to our{" "}
+            <a href="/terms" className="underline hover:text-[var(--text-primary)] transition-colors">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" className="underline hover:text-[var(--text-primary)] transition-colors">
+              Privacy Policy
+            </a>
+            .
+          </p>
         </div>
-
-        {/* Footer */}
-        <p className="text-center text-[12px] text-[var(--text-secondary)] mt-8">
-          By continuing, you agree to our{" "}
-          <a href="/terms" className="underline hover:text-[var(--text-primary)] transition-colors">
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a href="/privacy" className="underline hover:text-[var(--text-primary)] transition-colors">
-            Privacy Policy
-          </a>
-          .
-        </p>
       </div>
     </div>
   );
