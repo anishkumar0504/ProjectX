@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  INSTANCE_ID: i-REPLACE_ME
+  ECR_REPO: projectx
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::897722674193:role/github-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        working-directory: backend   # remove this line if the Dockerfile is at the repo root
+        run: |
+          IMAGE=${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO }}
+          docker build -t $IMAGE:${{ github.sha }} -t $IMAGE:latest .
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
+      - name: Deploy via SSM
+        run: |
+          REG=${{ steps.ecr.outputs.registry }}
+          IMG=$REG/${{ env.ECR_REPO }}:${{ github.sha }}
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids ${{ env.INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[
+              \"cd /opt/projectx\",
+              \"aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $REG\",
+              \"sed -i 's|^API_IMAGE=.*|API_IMAGE=$IMG|' .env\",
+              \"docker compose pull api\",
+              \"docker compose up -d api\",
+              \"docker image prune -f\"
+            ]" \
+            --query "Command.CommandId" --output text)
+          aws ssm wait command-executed --command-id $CMD_ID --instance-id ${{ env.INSTANCE_ID }}
