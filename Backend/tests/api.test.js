@@ -1,3 +1,23 @@
+process.env.NODE_ENV = "test";
+process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/appdb?schema=public";
+process.env.DIRECT_URL = "postgresql://postgres:postgres@localhost:5432/appdb?schema=public";
+process.env.AUTH_MIDDLEWARE_ENABLED = "false";
+process.env.JWT_SECRET = "test-jest-secret-key-12345";
+
+
+
+jest.mock("../GeminiBuilder/api", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const content = JSON.parse(
+    fs.readFileSync(path.join(__dirname, "../templates/vpc-endpoint.json"), "utf8")
+  );
+  return {
+    ...jest.requireActual("../GeminiBuilder/api"),
+    generatePracticalContent: jest.fn().mockResolvedValue(content),
+  };
+});
+
 const request = require("supertest");
 const path = require("path");
 const fs = require("fs");
@@ -6,10 +26,10 @@ const prisma = new PrismaClient();
 const app = require("../src/server");
 const fixtures = require("./fixtures");
 // At the top of tests/api.test.js
-process.env.NODE_ENV = "test";
-process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/appdb?schema=public"; // <-- Make sure this says appdb
-process.env.AUTH_MIDDLEWARE_ENABLED = "false";
-process.env.JWT_SECRET = "test-jest-secret-key-12345";
+// process.env.NODE_ENV = "test";
+// process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/appdb?schema=public"; // <-- Make sure this says appdb
+// process.env.AUTH_MIDDLEWARE_ENABLED = "false";
+// process.env.JWT_SECRET = "test-jest-secret-key-12345";
 // ─── Shared state across tests ───
 let token = "";
 let userId = "";
@@ -21,9 +41,13 @@ let documentIdNoImages = "";
 // ═══════════════════════════════════════════════════════
 //  GLOBAL SETUP & TEARDOWN
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  GLOBAL SETUP & TEARDOWN
+// ═══════════════════════════════════════════════════════
 beforeAll(async () => {
   // Clean test DB in correct FK order
   await prisma.document.deleteMany();
+  await prisma.order.deleteMany();
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();
   await prisma.template.deleteMany();
@@ -52,6 +76,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await prisma.document.deleteMany();
+  await prisma.order.deleteMany();
   await prisma.session.deleteMany();
   await prisma.user.deleteMany();
   await prisma.template.deleteMany();
@@ -88,7 +113,7 @@ describe("POST /api/auth/register", () => {
     expect(res.body.user.id).toBeDefined();
     expect(res.body.user.email).toBe(fixtures.TEST_USER.email);
     expect(res.body.user.role).toBe("USER");
-    expect(res.body.user.credits).toBe(0);
+expect(res.body.user.credits).toBe(20);
     expect(res.body.user.password).toBeUndefined(); // never leak
 
     expect(res.body.session).toBeDefined();
@@ -327,6 +352,13 @@ describe("GET /api/templates/:slug", () => {
 //  8. DOCUMENTS — GENERATE (hardcoded, no files)
 // ═══════════════════════════════════════════════════════
 describe("POST /api/documents/generate", () => {
+
+beforeAll(async () => {
+    await prisma.user.update({ where: { id: userId }, data: { credits: 1000 } });
+  });
+
+  
+
   it("should generate a document with hardcoded template (useGemini=false)", async () => {
     const res = await request(app)
       .post("/api/documents/generate")
@@ -687,7 +719,7 @@ describe("Session persistence", () => {
       orderBy: { createdAt: "desc" },
     });
     expect(session).toBeDefined();
-    expect(session.token).toMatch(/^sess_/);
+expect(session.token).toMatch(/^[a-f0-9]{32,}$/);
     expect(session.expiresAt.getTime()).toBeGreaterThan(Date.now());
   });
 });

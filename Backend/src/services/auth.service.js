@@ -48,8 +48,11 @@ class AuthService {
   // 1. Traditional Register
   async register({ email, password, name }) {
     const exists = await prisma.user.findUnique({ where: { email } });
-    if (exists) throw new Error("Email already registered");
-
+if (exists) {
+  const err = new Error("Email already registered");
+  err.status = 409;
+  throw err;
+}
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {

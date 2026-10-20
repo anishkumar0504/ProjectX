@@ -7,11 +7,11 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:seed": "node prisma/seed.js",
-    "test": "jest --runInBand --forceExit",
+"test": "jest --runInBand --forceExit",
     "generate-previews": "node scripts/generate-previews.js",
-    "test:watch": "jest --watch --runInBand",
-    "postinstall": "prisma generate"
+"test:watch": "jest --runInBand --forceExit --watch",    "postinstall": "prisma generate"
   },
+  
   "dependencies": {
     "@prisma/client": "6.19.3",
     "bcryptjs": "^2.4.3",

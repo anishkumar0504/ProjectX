@@ -6,4 +6,6 @@ module.exports = {
   forceExit: true,
   detectOpenHandles: true,
   setupFiles: ["<rootDir>/tests/setup.js"],
+    globalSetup: "./tests/globalSetup.js",
+
 };
