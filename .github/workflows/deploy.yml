@@ -41,8 +41,9 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
+  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
 
     steps:
       - name: Checkout repository
