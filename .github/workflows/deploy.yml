@@ -1,4 +1,4 @@
-
+```yaml
 name: ProjectX Backend CI/CD
 
 on:
@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
-    # Temporary, isolated database for CI tests.
     services:
       postgres:
         image: postgres:16-alpine
@@ -41,9 +40,9 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-env:
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
-  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
 
     steps:
       - name: Checkout repository
@@ -53,7 +52,6 @@ env:
         shell: bash
         run: |
           set -euo pipefail
-
           TOKEN=$(curl -fsS \
             -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" |
@@ -115,11 +113,7 @@ env:
         run: |
           set -euo pipefail
           IMAGE="$REGISTRY/$ECR_REPO"
-
-          docker build \
-            --pull \
-            -t "$IMAGE:$GITHUB_SHA" \
-            .
+          docker build --pull -t "$IMAGE:$GITHUB_SHA" .
 
       - name: Push image to ECR
         env:
@@ -203,3 +197,4 @@ env:
 
           echo "Timed out waiting for SSM."
           exit 1
+```
