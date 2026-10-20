@@ -57,12 +57,17 @@ jobs:
           cache: npm
           cache-dependency-path: Backend/package-lock.json
 
-      - name: Install backend dependencies
+      - name: Install dependencies
         working-directory: Backend
         run: npm ci
 
       - name: Run backend tests
         working-directory: Backend
+        env:
+          NODE_ENV: test
+          RAZORPAY_KEY_ID: rzp_test_ci_dummy
+          RAZORPAY_KEY_SECRET: ci_dummy_secret
+          RAZORPAY_WEBHOOK_SECRET: ci_dummy_webhook_secret
         run: npm test -- --passWithNoTests
 
       - name: Configure AWS credentials using OIDC
@@ -85,7 +90,6 @@ jobs:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
           set -euo pipefail
-
           IMAGE="$REGISTRY/$ECR_REPO"
 
           docker build \
@@ -93,14 +97,12 @@ jobs:
             -t "$IMAGE:$GITHUB_SHA" \
             .
 
-      - name: Push Docker image to ECR
+      - name: Push image to ECR
         env:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
           set -euo pipefail
-
-          IMAGE="$REGISTRY/$ECR_REPO:$GITHUB_SHA"
-          docker push "$IMAGE"
+          docker push "$REGISTRY/$ECR_REPO:$GITHUB_SHA"
 
       - name: Deploy to EC2 using SSM
         shell: bash
@@ -110,13 +112,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [[ -z "${INSTANCE_ID:-}" ]]; then
-            echo "ERROR: Set the GitHub Actions variable EC2_INSTANCE_ID."
-            exit 1
-          fi
-
           if [[ "$INSTANCE_ID" != "i-06654695856521b50" ]]; then
-            echo "ERROR: EC2_INSTANCE_ID does not match the verified production instance."
+            echo "ERROR: EC2_INSTANCE_ID is missing or incorrect."
             exit 1
           fi
 
@@ -158,7 +155,6 @@ jobs:
 
             case "$STATUS" in
               Success)
-                echo "Deployment command succeeded."
                 aws ssm get-command-invocation \
                   --command-id "$COMMAND_ID" \
                   --instance-id "$INSTANCE_ID" \
@@ -166,28 +162,20 @@ jobs:
                   --output json
                 exit 0
                 ;;
-
               Pending|InProgress|Delayed|"")
-                echo "Deployment status: ${STATUS:-Pending} (attempt $attempt/120)"
+                echo "Deployment status: ${STATUS:-Pending}"
                 sleep 5
                 ;;
-
               *)
-                echo "Deployment failed with status: $STATUS"
+                echo "Deployment failed: $STATUS"
                 aws ssm get-command-invocation \
                   --command-id "$COMMAND_ID" \
                   --instance-id "$INSTANCE_ID" \
-                  --query '{Status:Status,Output:StandardOutputContent,Errors:StandardErrorContent}' \
                   --output json || true
                 exit 1
                 ;;
             esac
           done
 
-          echo "ERROR: Deployment timed out waiting for SSM."
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "$INSTANCE_ID" \
-            --query '{Status:Status,Output:StandardOutputContent,Errors:StandardErrorContent}' \
-            --output json || true
+          echo "Timed out waiting for SSM."
           exit 1
