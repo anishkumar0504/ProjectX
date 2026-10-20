@@ -1,3 +1,4 @@
+
 name: ProjectX Backend CI/CD
 
 on:
@@ -28,13 +29,13 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: projectx_test
+          POSTGRES_DB: appdb
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d projectx_test"
+          --health-cmd "pg_isready -U postgres -d appdb"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -57,20 +58,22 @@ jobs:
       - name: Prepare test database
         working-directory: Backend
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
-          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/appdb?schema=public
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/appdb?schema=public
         run: npx prisma db push
 
       - name: Run backend tests
         working-directory: Backend
         env:
           NODE_ENV: test
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
-          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/appdb?schema=public
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/appdb?schema=public
           RAZORPAY_KEY_ID: rzp_test_ci_dummy
           RAZORPAY_KEY_SECRET: ci_dummy_secret
           RAZORPAY_WEBHOOK_SECRET: ci_dummy_webhook_secret
-        run: npm test -- --passWithNoTests
+          GEMINI_API_KEY: ci_dummy_gemini_key
+        run: npm test -- --runInBand --forceExit
 
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
