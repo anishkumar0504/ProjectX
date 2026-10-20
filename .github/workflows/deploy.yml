@@ -25,6 +25,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    # Temporary, isolated database for CI tests.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: projectx_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d projectx_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/projectx_test?schema=public
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -60,6 +79,10 @@ jobs:
       - name: Install dependencies
         working-directory: Backend
         run: npm ci
+
+      - name: Prepare test database
+        working-directory: Backend
+        run: npx prisma db push
 
       - name: Run backend tests
         working-directory: Backend
