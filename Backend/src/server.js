@@ -19,13 +19,24 @@ for (const d of ["uploads/temp", "uploads/outputs"]) {
 // 👇 ADD THIS LINE to serve the preview PNGs from the public/previews folder
 app.use("/previews", express.static(path.join(__dirname, "..", "public", "previews")));
 app.use("/templates", express.static(path.join(__dirname, "..", "public","templates")));
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://projectx.iamanish.in",
+      "http://localhost:5173",
+      "http://localhost:3000",
+    ],
+  })
+);
 app.use(
   "/api/payment/webhook",
   express.raw({ type: "application/json" })
 );
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.get("/health", (req, res) => {
+  res.status(200).json({ message: "ok" });
+});
 if (config.nodeEnv !== "test") app.use(morgan("dev"));
 const cleanupRoutes = require("./routes/cleanup.routes");
 app.use("/api", cleanupRoutes);
