@@ -25,6 +25,7 @@ app.use(
       "https://projectx.iamanish.in",
       "http://localhost:5173",
       "http://localhost:3000",
+      "https://projectx.landing.iamanish.in",
     ],
   })
 );
